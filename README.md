@@ -1,1 +1,1 @@
-# nft-marketplace
+# taral-marketplace

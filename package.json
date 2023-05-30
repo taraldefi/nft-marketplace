@@ -1,0 +1,29 @@
+{
+    "name": "clarity-nft-marketplace",
+    "version": "1.0.0",
+    "description": "Nft marketplace smart contracts",
+    "main": "index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "eol": "npx eolConverter \"project/**/*.*\""
+  
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/dorucioclea/taral-marketplace.git"
+    },
+    "keywords": [
+      "clarity",
+      "taral",
+      "borowing"
+    ],
+    "author": "Doru Cioclea",
+    "license": "ISC",
+    "bugs": {
+      "url": "https://github.com/dorucioclea/taral-marketplace/issues"
+    },
+    "homepage": "https://github.com/dorucioclea/taral-marketplace#readme",
+    "dependencies": {
+      "eol-converter-cli": "^1.0.8"
+    }
+  }
