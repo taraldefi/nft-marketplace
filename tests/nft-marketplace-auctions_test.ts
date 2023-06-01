@@ -2,81 +2,8 @@ import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarine
 import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
 
 Clarinet.test({
-    name: "Ensure that we can start an auction",
-    async fn(chain: Chain, accounts: Map<string, Account>) {
-      let wallet_1 = accounts.get("wallet_1")!;
-      let deployer = accounts.get("deployer")!;
-
-      // whitelist the contract
-
-      let whitelist = chain.mineBlock([
-        Tx.contractCall(
-            "nft-marketplace", 
-            "set-whitelisted", 
-            [
-              types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
-              types.bool(true)
-            ],
-            deployer.address
-          ),
-      ]);
-
-      whitelist.receipts[0].result.expectOk();
-
-
-      // mint an nft on wallet
-
-      let mint = chain.mineBlock([
-        Tx.contractCall(
-            "sip009-nft",
-            "mint",
-            [
-                types.principal(wallet_1.address),
-            ],
-            deployer.address
-        ),
-      ]);
-
-      mint.receipts[0].result.expectOk();
-      
-      let nftId = chain.mineBlock([ 
-        Tx.contractCall(
-          "sip009-nft",
-          "get-last-token-id",
-          [],
-          deployer.address
-        ),
-      ]);
-
-      nftId.receipts[0].result.expectOk().expectUint(1);
-
-      let block = chain.mineBlock([
-        Tx.contractCall(
-          "nft-marketplace", 
-          "start-auction", 
-          [
-            types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
-            types.tuple({
-              "token-id": types.uint(1),
-              "start-block": types.uint(100),
-              "end-block": types.uint(1000),
-              "start-bid": types.uint(100),
-              "reserve-price": types.uint(1000)
-            })
-          ],
-          wallet_1.address
-        ),
-      ]);
-
-      block.receipts[0].result.expectOk();
-
-    },
-  });
-
-Clarinet.test({
-  name: "Ensure that a bid can be placed on an auction",
+  name: "Ensure that we can start an auction",
   async fn(chain: Chain, accounts: Map<string, Account>) {
-    let wallet_2 = accounts.get('wallet_2')!;
     let wallet_1 = accounts.get("wallet_1")!;
     let deployer = accounts.get("deployer")!;
 
@@ -84,36 +11,35 @@ Clarinet.test({
 
     let whitelist = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace", 
-          "set-whitelisted", 
-          [
-            types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
-            types.bool(true)
-          ],
-          deployer.address
-        ),
+        "nft-marketplace",
+        "set-whitelisted",
+        [
+          types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
+          types.bool(true)
+        ],
+        deployer.address
+      ),
     ]);
 
     whitelist.receipts[0].result.expectOk();
 
-    // chain.advance_chain_tip(1000);
 
     // mint an nft on wallet
 
     let mint = chain.mineBlock([
       Tx.contractCall(
-          "sip009-nft",
-          "mint",
-          [
-              types.principal(wallet_1.address),
-          ],
-          deployer.address
+        "sip009-nft",
+        "mint",
+        [
+          types.principal(wallet_1.address),
+        ],
+        deployer.address
       ),
     ]);
 
     mint.receipts[0].result.expectOk();
 
-    let nftId = chain.mineBlock([ 
+    let nftId = chain.mineBlock([
       Tx.contractCall(
         "sip009-nft",
         "get-last-token-id",
@@ -126,8 +52,82 @@ Clarinet.test({
 
     let block = chain.mineBlock([
       Tx.contractCall(
-        "nft-marketplace", 
-        "start-auction", 
+        "nft-marketplace",
+        "start-auction",
+        [
+          types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
+          types.tuple({
+            "token-id": types.uint(1),
+            "start-block": types.uint(100),
+            "end-block": types.uint(1000),
+            "start-bid": types.uint(100),
+            "reserve-price": types.uint(1000)
+          })
+        ],
+        wallet_1.address
+      ),
+    ]);
+
+    block.receipts[0].result.expectOk();
+
+  },
+});
+
+Clarinet.test({
+  name: "Ensure that a bid can be placed on an auction",
+  async fn(chain: Chain, accounts: Map<string, Account>) {
+    let wallet_2 = accounts.get('wallet_2')!;
+    let wallet_1 = accounts.get("wallet_1")!;
+    let deployer = accounts.get("deployer")!;
+
+    // whitelist the contract
+
+    let whitelist = chain.mineBlock([
+      Tx.contractCall(
+        "nft-marketplace",
+        "set-whitelisted",
+        [
+          types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
+          types.bool(true)
+        ],
+        deployer.address
+      ),
+    ]);
+
+    whitelist.receipts[0].result.expectOk();
+
+    // chain.advance_chain_tip(1000);
+
+    // mint an nft on wallet
+
+    let mint = chain.mineBlock([
+      Tx.contractCall(
+        "sip009-nft",
+        "mint",
+        [
+          types.principal(wallet_1.address),
+        ],
+        deployer.address
+      ),
+    ]);
+
+    mint.receipts[0].result.expectOk();
+
+    let nftId = chain.mineBlock([
+      Tx.contractCall(
+        "sip009-nft",
+        "get-last-token-id",
+        [],
+        deployer.address
+      ),
+    ]);
+
+    nftId.receipts[0].result.expectOk().expectUint(1);
+
+    let block = chain.mineBlock([
+      Tx.contractCall(
+        "nft-marketplace",
+        "start-auction",
         [
           types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
           types.tuple({
@@ -169,14 +169,14 @@ Clarinet.test({
 
     let whitelist = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace", 
-          "set-whitelisted", 
-          [
-            types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
-            types.bool(true)
-          ],
-          deployer.address
-        ),
+        "nft-marketplace",
+        "set-whitelisted",
+        [
+          types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
+          types.bool(true)
+        ],
+        deployer.address
+      ),
     ]);
 
     whitelist.receipts[0].result.expectOk();
@@ -184,18 +184,18 @@ Clarinet.test({
     // mint an nft on wallet
     let mint = chain.mineBlock([
       Tx.contractCall(
-          "sip009-nft",
-          "mint",
-          [
-              types.principal(wallet_1.address),
-          ],
-          deployer.address
+        "sip009-nft",
+        "mint",
+        [
+          types.principal(wallet_1.address),
+        ],
+        deployer.address
       ),
     ]);
 
     mint.receipts[0].result.expectOk();
 
-    let nftId = chain.mineBlock([ 
+    let nftId = chain.mineBlock([
       Tx.contractCall(
         "sip009-nft",
         "get-last-token-id",
@@ -208,8 +208,8 @@ Clarinet.test({
 
     let block = chain.mineBlock([
       Tx.contractCall(
-        "nft-marketplace", 
-        "start-auction", 
+        "nft-marketplace",
+        "start-auction",
         [
           types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
           types.tuple({
@@ -234,11 +234,11 @@ Clarinet.test({
 
     let checkOwner = chain.mineBlock([
       Tx.contractCall(
-        "sip009-nft", 
-        "get-owner", 
+        "sip009-nft",
+        "get-owner",
         [
           types.uint(1)
-        ], 
+        ],
         wallet_1.address
       ),
     ]);
@@ -260,7 +260,7 @@ Clarinet.test({
     block.receipts[0].result.expectOk().expectBool(true);
 
     var stxTransferEvent = block.receipts[0].events[0].stx_transfer_event;
-    
+
     assertEquals(stxTransferEvent.sender, `${wallet_2.address}`);
     assertEquals(stxTransferEvent.recipient, `${deployer.address}.nft-marketplace`);
     assertEquals(stxTransferEvent.amount, '1200');
@@ -310,14 +310,14 @@ Clarinet.test({
 
     let whitelist = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace", 
-          "set-whitelisted", 
-          [
-            types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
-            types.bool(true)
-          ],
-          deployer.address
-        ),
+        "nft-marketplace",
+        "set-whitelisted",
+        [
+          types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
+          types.bool(true)
+        ],
+        deployer.address
+      ),
     ]);
 
     whitelist.receipts[0].result.expectOk();
@@ -325,18 +325,18 @@ Clarinet.test({
     // mint an nft on wallet
     let mint = chain.mineBlock([
       Tx.contractCall(
-          "sip009-nft",
-          "mint",
-          [
-              types.principal(wallet_1.address),
-          ],
-          deployer.address
+        "sip009-nft",
+        "mint",
+        [
+          types.principal(wallet_1.address),
+        ],
+        deployer.address
       ),
     ]);
 
     mint.receipts[0].result.expectOk();
 
-    let nftId = chain.mineBlock([ 
+    let nftId = chain.mineBlock([
       Tx.contractCall(
         "sip009-nft",
         "get-last-token-id",
@@ -349,8 +349,8 @@ Clarinet.test({
 
     let block = chain.mineBlock([
       Tx.contractCall(
-        "nft-marketplace", 
-        "start-auction", 
+        "nft-marketplace",
+        "start-auction",
         [
           types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
           types.tuple({
@@ -375,11 +375,11 @@ Clarinet.test({
 
     let checkOwner = chain.mineBlock([
       Tx.contractCall(
-        "sip009-nft", 
-        "get-owner", 
+        "sip009-nft",
+        "get-owner",
         [
           types.uint(1)
-        ], 
+        ],
         wallet_1.address
       ),
     ]);
@@ -401,13 +401,13 @@ Clarinet.test({
     block.receipts[0].result.expectOk().expectBool(true);
 
     var stxTransferEvent = block.receipts[0].events[0].stx_transfer_event;
-    
+
     assertEquals(stxTransferEvent.sender, `${wallet_2.address}`);
     assertEquals(stxTransferEvent.recipient, `${deployer.address}.nft-marketplace`);
     assertEquals(stxTransferEvent.amount, '1200');
 
-     // Place a bid
-     block = chain.mineBlock([
+    // Place a bid
+    block = chain.mineBlock([
       Tx.contractCall('nft-marketplace', 'place-bid', [
         types.uint(0), // auction id
         types.uint(5000) // bid amount
@@ -469,14 +469,14 @@ Clarinet.test({
 
     let whitelist = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace", 
-          "set-whitelisted", 
-          [
-            types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
-            types.bool(true)
-          ],
-          deployer.address
-        ),
+        "nft-marketplace",
+        "set-whitelisted",
+        [
+          types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
+          types.bool(true)
+        ],
+        deployer.address
+      ),
     ]);
 
     whitelist.receipts[0].result.expectOk();
@@ -484,18 +484,18 @@ Clarinet.test({
     // mint an nft on wallet
     let mint = chain.mineBlock([
       Tx.contractCall(
-          "sip009-nft",
-          "mint",
-          [
-              types.principal(wallet_1.address),
-          ],
-          deployer.address
+        "sip009-nft",
+        "mint",
+        [
+          types.principal(wallet_1.address),
+        ],
+        deployer.address
       ),
     ]);
 
     mint.receipts[0].result.expectOk();
 
-    let nftId = chain.mineBlock([ 
+    let nftId = chain.mineBlock([
       Tx.contractCall(
         "sip009-nft",
         "get-last-token-id",
@@ -508,8 +508,8 @@ Clarinet.test({
 
     let block = chain.mineBlock([
       Tx.contractCall(
-        "nft-marketplace", 
-        "start-auction", 
+        "nft-marketplace",
+        "start-auction",
         [
           types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
           types.tuple({
@@ -534,11 +534,11 @@ Clarinet.test({
 
     let checkOwner = chain.mineBlock([
       Tx.contractCall(
-        "sip009-nft", 
-        "get-owner", 
+        "sip009-nft",
+        "get-owner",
         [
           types.uint(1)
-        ], 
+        ],
         wallet_1.address
       ),
     ]);
@@ -560,13 +560,13 @@ Clarinet.test({
     block.receipts[0].result.expectOk().expectBool(true);
 
     var stxTransferEvent = block.receipts[0].events[0].stx_transfer_event;
-    
+
     assertEquals(stxTransferEvent.sender, `${wallet_2.address}`);
     assertEquals(stxTransferEvent.recipient, `${deployer.address}.nft-marketplace`);
     assertEquals(stxTransferEvent.amount, '1200');
 
-     // Place a bid
-     block = chain.mineBlock([
+    // Place a bid
+    block = chain.mineBlock([
       Tx.contractCall('nft-marketplace', 'place-bid', [
         types.uint(0), // auction id
         types.uint(5000) // bid amount
@@ -626,14 +626,14 @@ Clarinet.test({
 
     let whitelist = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace", 
-          "set-whitelisted", 
-          [
-            types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
-            types.bool(true)
-          ],
-          deployer.address
-        ),
+        "nft-marketplace",
+        "set-whitelisted",
+        [
+          types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
+          types.bool(true)
+        ],
+        deployer.address
+      ),
     ]);
 
     whitelist.receipts[0].result.expectOk();
@@ -641,18 +641,18 @@ Clarinet.test({
     // mint an nft on wallet
     let mint = chain.mineBlock([
       Tx.contractCall(
-          "sip009-nft",
-          "mint",
-          [
-              types.principal(wallet_1.address),
-          ],
-          deployer.address
+        "sip009-nft",
+        "mint",
+        [
+          types.principal(wallet_1.address),
+        ],
+        deployer.address
       ),
     ]);
 
     mint.receipts[0].result.expectOk();
 
-    let nftId = chain.mineBlock([ 
+    let nftId = chain.mineBlock([
       Tx.contractCall(
         "sip009-nft",
         "get-last-token-id",
@@ -666,10 +666,10 @@ Clarinet.test({
     // pause the contract
     let pause = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace",
-          "pause-contract",
-          [],
-          deployer.address
+        "nft-marketplace",
+        "pause-contract",
+        [],
+        deployer.address
       ),
     ]);
 
@@ -677,8 +677,8 @@ Clarinet.test({
 
     let block = chain.mineBlock([
       Tx.contractCall(
-        "nft-marketplace", 
-        "start-auction", 
+        "nft-marketplace",
+        "start-auction",
         [
           types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
           types.tuple({
@@ -710,14 +710,14 @@ Clarinet.test({
 
     let whitelist = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace", 
-          "set-whitelisted", 
-          [
-            types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
-            types.bool(true)
-          ],
-          deployer.address
-        ),
+        "nft-marketplace",
+        "set-whitelisted",
+        [
+          types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
+          types.bool(true)
+        ],
+        deployer.address
+      ),
     ]);
 
     whitelist.receipts[0].result.expectOk();
@@ -725,18 +725,18 @@ Clarinet.test({
     // mint an nft on wallet
     let mint = chain.mineBlock([
       Tx.contractCall(
-          "sip009-nft",
-          "mint",
-          [
-              types.principal(wallet_1.address),
-          ],
-          deployer.address
+        "sip009-nft",
+        "mint",
+        [
+          types.principal(wallet_1.address),
+        ],
+        deployer.address
       ),
     ]);
 
     mint.receipts[0].result.expectOk();
 
-    let nftId = chain.mineBlock([ 
+    let nftId = chain.mineBlock([
       Tx.contractCall(
         "sip009-nft",
         "get-last-token-id",
@@ -749,8 +749,8 @@ Clarinet.test({
 
     let block = chain.mineBlock([
       Tx.contractCall(
-        "nft-marketplace", 
-        "start-auction", 
+        "nft-marketplace",
+        "start-auction",
         [
           types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
           types.tuple({
@@ -775,11 +775,11 @@ Clarinet.test({
 
     let checkOwner = chain.mineBlock([
       Tx.contractCall(
-        "sip009-nft", 
-        "get-owner", 
+        "sip009-nft",
+        "get-owner",
         [
           types.uint(1)
-        ], 
+        ],
         wallet_1.address
       ),
     ]);
@@ -790,13 +790,13 @@ Clarinet.test({
 
     chain.mineEmptyBlockUntil(500);
 
-     // pause the contract
-     let pause = chain.mineBlock([
+    // pause the contract
+    let pause = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace",
-          "pause-contract",
-          [],
-          deployer.address
+        "nft-marketplace",
+        "pause-contract",
+        [],
+        deployer.address
       ),
     ]);
 
@@ -827,14 +827,14 @@ Clarinet.test({
 
     let whitelist = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace", 
-          "set-whitelisted", 
-          [
-            types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
-            types.bool(true)
-          ],
-          deployer.address
-        ),
+        "nft-marketplace",
+        "set-whitelisted",
+        [
+          types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
+          types.bool(true)
+        ],
+        deployer.address
+      ),
     ]);
 
     whitelist.receipts[0].result.expectOk();
@@ -842,18 +842,18 @@ Clarinet.test({
     // mint an nft on wallet
     let mint = chain.mineBlock([
       Tx.contractCall(
-          "sip009-nft",
-          "mint",
-          [
-              types.principal(wallet_1.address),
-          ],
-          deployer.address
+        "sip009-nft",
+        "mint",
+        [
+          types.principal(wallet_1.address),
+        ],
+        deployer.address
       ),
     ]);
 
     mint.receipts[0].result.expectOk();
 
-    let nftId = chain.mineBlock([ 
+    let nftId = chain.mineBlock([
       Tx.contractCall(
         "sip009-nft",
         "get-last-token-id",
@@ -866,8 +866,8 @@ Clarinet.test({
 
     let block = chain.mineBlock([
       Tx.contractCall(
-        "nft-marketplace", 
-        "start-auction", 
+        "nft-marketplace",
+        "start-auction",
         [
           types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
           types.tuple({
@@ -892,11 +892,11 @@ Clarinet.test({
 
     let checkOwner = chain.mineBlock([
       Tx.contractCall(
-        "sip009-nft", 
-        "get-owner", 
+        "sip009-nft",
+        "get-owner",
         [
           types.uint(1)
-        ], 
+        ],
         wallet_1.address
       ),
     ]);
@@ -918,13 +918,13 @@ Clarinet.test({
     block.receipts[0].result.expectOk().expectBool(true);
 
     var stxTransferEvent = block.receipts[0].events[0].stx_transfer_event;
-    
+
     assertEquals(stxTransferEvent.sender, `${wallet_2.address}`);
     assertEquals(stxTransferEvent.recipient, `${deployer.address}.nft-marketplace`);
     assertEquals(stxTransferEvent.amount, '1200');
 
-     // Place a bid
-     block = chain.mineBlock([
+    // Place a bid
+    block = chain.mineBlock([
       Tx.contractCall('nft-marketplace', 'place-bid', [
         types.uint(0), // auction id
         types.uint(5000) // bid amount
@@ -945,13 +945,13 @@ Clarinet.test({
 
     block.receipts[0].result.expectOk().expectBool(true);
 
-     // pause the contract
-     let pause = chain.mineBlock([
+    // pause the contract
+    let pause = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace",
-          "pause-contract",
-          [],
-          deployer.address
+        "nft-marketplace",
+        "pause-contract",
+        [],
+        deployer.address
       ),
     ]);
 
@@ -981,14 +981,14 @@ Clarinet.test({
 
     let whitelist = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace", 
-          "set-whitelisted", 
-          [
-            types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
-            types.bool(true)
-          ],
-          deployer.address
-        ),
+        "nft-marketplace",
+        "set-whitelisted",
+        [
+          types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
+          types.bool(true)
+        ],
+        deployer.address
+      ),
     ]);
 
     whitelist.receipts[0].result.expectOk();
@@ -996,18 +996,18 @@ Clarinet.test({
     // mint an nft on wallet
     let mint = chain.mineBlock([
       Tx.contractCall(
-          "sip009-nft",
-          "mint",
-          [
-              types.principal(wallet_1.address),
-          ],
-          deployer.address
+        "sip009-nft",
+        "mint",
+        [
+          types.principal(wallet_1.address),
+        ],
+        deployer.address
       ),
     ]);
 
     mint.receipts[0].result.expectOk();
 
-    let nftId = chain.mineBlock([ 
+    let nftId = chain.mineBlock([
       Tx.contractCall(
         "sip009-nft",
         "get-last-token-id",
@@ -1020,8 +1020,8 @@ Clarinet.test({
 
     let block = chain.mineBlock([
       Tx.contractCall(
-        "nft-marketplace", 
-        "start-auction", 
+        "nft-marketplace",
+        "start-auction",
         [
           types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
           types.tuple({
@@ -1046,11 +1046,11 @@ Clarinet.test({
 
     let checkOwner = chain.mineBlock([
       Tx.contractCall(
-        "sip009-nft", 
-        "get-owner", 
+        "sip009-nft",
+        "get-owner",
         [
           types.uint(1)
-        ], 
+        ],
         wallet_1.address
       ),
     ]);
@@ -1072,13 +1072,13 @@ Clarinet.test({
     block.receipts[0].result.expectOk().expectBool(true);
 
     var stxTransferEvent = block.receipts[0].events[0].stx_transfer_event;
-    
+
     assertEquals(stxTransferEvent.sender, `${wallet_2.address}`);
     assertEquals(stxTransferEvent.recipient, `${deployer.address}.nft-marketplace`);
     assertEquals(stxTransferEvent.amount, '1200');
 
-     // Place a bid
-     block = chain.mineBlock([
+    // Place a bid
+    block = chain.mineBlock([
       Tx.contractCall('nft-marketplace', 'place-bid', [
         types.uint(0), // auction id
         types.uint(5000) // bid amount
@@ -1099,13 +1099,13 @@ Clarinet.test({
 
     block.receipts[0].result.expectOk().expectBool(true);
 
-     // pause the contract
-     let pause = chain.mineBlock([
+    // pause the contract
+    let pause = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace",
-          "pause-contract",
-          [],
-          deployer.address
+        "nft-marketplace",
+        "pause-contract",
+        [],
+        deployer.address
       ),
     ]);
 
@@ -1134,14 +1134,14 @@ Clarinet.test({
 
     let whitelist = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace", 
-          "set-whitelisted", 
-          [
-            types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
-            types.bool(true)
-          ],
-          deployer.address
-        ),
+        "nft-marketplace",
+        "set-whitelisted",
+        [
+          types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
+          types.bool(true)
+        ],
+        deployer.address
+      ),
     ]);
 
     whitelist.receipts[0].result.expectOk();
@@ -1149,18 +1149,18 @@ Clarinet.test({
     // mint an nft on wallet
     let mint = chain.mineBlock([
       Tx.contractCall(
-          "sip009-nft",
-          "mint",
-          [
-              types.principal(wallet_1.address),
-          ],
-          deployer.address
+        "sip009-nft",
+        "mint",
+        [
+          types.principal(wallet_1.address),
+        ],
+        deployer.address
       ),
     ]);
 
     mint.receipts[0].result.expectOk();
 
-    let nftId = chain.mineBlock([ 
+    let nftId = chain.mineBlock([
       Tx.contractCall(
         "sip009-nft",
         "get-last-token-id",
@@ -1173,8 +1173,8 @@ Clarinet.test({
 
     let block = chain.mineBlock([
       Tx.contractCall(
-        "nft-marketplace", 
-        "start-auction", 
+        "nft-marketplace",
+        "start-auction",
         [
           types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
           types.tuple({
@@ -1199,11 +1199,11 @@ Clarinet.test({
 
     let checkOwner = chain.mineBlock([
       Tx.contractCall(
-        "sip009-nft", 
-        "get-owner", 
+        "sip009-nft",
+        "get-owner",
         [
           types.uint(1)
-        ], 
+        ],
         wallet_1.address
       ),
     ]);
@@ -1225,7 +1225,7 @@ Clarinet.test({
     block.receipts[0].result.expectOk().expectBool(true);
 
     var stxTransferEvent = block.receipts[0].events[0].stx_transfer_event;
-    
+
     assertEquals(stxTransferEvent.sender, `${wallet_2.address}`);
     assertEquals(stxTransferEvent.recipient, `${deployer.address}.nft-marketplace`);
     assertEquals(stxTransferEvent.amount, '1200');
@@ -1233,13 +1233,13 @@ Clarinet.test({
     // Advance the time
     chain.mineEmptyBlockUntil(2000);
 
-     // pause the contract
-     let pause = chain.mineBlock([
+    // pause the contract
+    let pause = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace",
-          "pause-contract",
-          [],
-          deployer.address
+        "nft-marketplace",
+        "pause-contract",
+        [],
+        deployer.address
       ),
     ]);
 
@@ -1271,14 +1271,14 @@ Clarinet.test({
 
     let whitelist = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace", 
-          "set-whitelisted", 
-          [
-            types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
-            types.bool(true)
-          ],
-          deployer.address
-        ),
+        "nft-marketplace",
+        "set-whitelisted",
+        [
+          types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
+          types.bool(true)
+        ],
+        deployer.address
+      ),
     ]);
 
     whitelist.receipts[0].result.expectOk();
@@ -1286,18 +1286,18 @@ Clarinet.test({
     // mint an nft on wallet
     let mint = chain.mineBlock([
       Tx.contractCall(
-          "sip009-nft",
-          "mint",
-          [
-              types.principal(wallet_1.address),
-          ],
-          deployer.address
+        "sip009-nft",
+        "mint",
+        [
+          types.principal(wallet_1.address),
+        ],
+        deployer.address
       ),
     ]);
 
     mint.receipts[0].result.expectOk();
 
-    let nftId = chain.mineBlock([ 
+    let nftId = chain.mineBlock([
       Tx.contractCall(
         "sip009-nft",
         "get-last-token-id",
@@ -1310,8 +1310,8 @@ Clarinet.test({
 
     let block = chain.mineBlock([
       Tx.contractCall(
-        "nft-marketplace", 
-        "start-auction", 
+        "nft-marketplace",
+        "start-auction",
         [
           types.principal('ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sip009-nft'),
           types.tuple({
@@ -1336,11 +1336,11 @@ Clarinet.test({
 
     let checkOwner = chain.mineBlock([
       Tx.contractCall(
-        "sip009-nft", 
-        "get-owner", 
+        "sip009-nft",
+        "get-owner",
         [
           types.uint(1)
-        ], 
+        ],
         wallet_1.address
       ),
     ]);
@@ -1362,7 +1362,7 @@ Clarinet.test({
     block.receipts[0].result.expectOk().expectBool(true);
 
     var stxTransferEvent = block.receipts[0].events[0].stx_transfer_event;
-    
+
     assertEquals(stxTransferEvent.sender, `${wallet_2.address}`);
     assertEquals(stxTransferEvent.recipient, `${deployer.address}.nft-marketplace`);
     assertEquals(stxTransferEvent.amount, '1200');
@@ -1370,13 +1370,13 @@ Clarinet.test({
     // Advance the time
     chain.mineEmptyBlockUntil(2000);
 
-     // pause the contract
-     let pause = chain.mineBlock([
+    // pause the contract
+    let pause = chain.mineBlock([
       Tx.contractCall(
-          "nft-marketplace",
-          "pause-contract",
-          [],
-          deployer.address
+        "nft-marketplace",
+        "pause-contract",
+        [],
+        deployer.address
       ),
     ]);
 
