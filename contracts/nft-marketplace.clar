@@ -134,6 +134,8 @@
   (begin
     (asserts! (is-eq tx-sender (var-get contract-owner)) err-unauthorised)
     (unwrap! (contract-call? .marketplace-storage set-whitelisted asset-contract whitelisted) marketplace-storage-error)
+    (print { action: "set-whitelisted", asset-contract: asset-contract, whitelisted: whitelisted })
+
     (ok true)
   )
 )
@@ -183,11 +185,17 @@
 
     ;; Transfer the NFT to the contract
     (unwrap! (transfer-nft nft-asset-contract (get token-id nft-asset) tx-sender (as-contract tx-sender)) failed-to-transfer-nft)
+
     (unwrap! (contract-call? .marketplace-storage add-fixed-price-listing listing-id { 
       maker: tx-sender, 
       nft-asset-contract: (contract-of nft-asset-contract), 
       token-id: (get token-id nft-asset), 
       price: (get price nft-asset) } ) marketplace-storage-error)
+
+    (print { action: "list-fixed-price", maker: tx-sender, 
+      nft-asset-contract: (contract-of nft-asset-contract), 
+      token-id: (get token-id nft-asset), 
+      price: (get price nft-asset) })
 
     (unwrap! (contract-call? .marketplace-storage increment-fixed-price-nonce) marketplace-storage-error)
 
@@ -211,6 +219,12 @@
     (unwrap! (contract-call? .marketplace-storage add-completed-fixed-price-listing listing-id listing) marketplace-storage-error)
     ;; Delete the listing
     (unwrap! (contract-call? .marketplace-storage remove-fixed-price-listing listing-id) marketplace-storage-error)
+
+    (print { action: "purchase-fixed-price-listing", listing-id: listing-id, 
+          nft-asset-contract: (contract-of nft-asset-contract), 
+          recipient: recipient, 
+          price: (get price listing) })
+
     (ok true)
   )
 )
@@ -229,6 +243,13 @@
     (unwrap! (contract-call? .marketplace-storage add-cancelled-fixed-price-listing listing-id listing) marketplace-storage-error)
     ;; Delete the listing
     (unwrap! (contract-call? .marketplace-storage remove-fixed-price-listing listing-id) marketplace-storage-error)
+
+    (print { action: "cancel-fixed-price-listing", maker: tx-sender, 
+          listing-id: listing-id,
+          nft-asset-contract: (contract-of nft-asset-contract), 
+          token-id: (get token-id listing), 
+          price: (get price listing) })
+
     (ok true)
   )
 )
@@ -256,6 +277,14 @@
       } nft-asset)) marketplace-storage-error)    
     
     (unwrap! (contract-call? .marketplace-storage increment-auction-nonce) marketplace-storage-error)
+
+    (print (merge { 
+      action: "start-auction",
+      maker: tx-sender, 
+      nft-asset-contract: (contract-of nft-asset-contract), 
+      highest-bid: u0, 
+      highest-bidder: none 
+      } nft-asset))
 
     (ok auction-id)
   )
@@ -294,6 +323,10 @@
             ;; Delete the bidder's bid
             (unwrap! (contract-call? .marketplace-storage delete-bid { auction-id: auction-id, bidder: some-bidder }) marketplace-storage-error)
 
+            (print (merge { action: "place-bid", bidder: tx-sender, auction-id: auction-id, bid: bid } auction))
+
+            (print (merge { action: "place-bid-return-previous-bid", previous-bidder: some-bidder, auction-id: auction-id, bid: (get highest-bid auction) } auction))
+
             (ok true)
         )
         (begin
@@ -303,6 +336,9 @@
                highest-bidder: (some tx-sender) })) marketplace-storage-error)
 
             (unwrap! (contract-call? .marketplace-storage add-bid { auction-id: auction-id, bidder: tx-sender } bid) marketplace-storage-error)
+
+            (print (merge { action: "place-bid", bidder: tx-sender, auction-id: auction-id, bid: bid } auction))
+
             (ok true)
         )
     )
@@ -330,6 +366,8 @@
           ;; Delete the auction
           (unwrap! (contract-call? .marketplace-storage delete-auction auction-id) marketplace-storage-error)
 
+          (print (merge { action: "end-auction", auction-id: auction-id, reserve-price-met: true } auction))
+
           (ok { auction-id: auction-id, reserve-price-met: true })
         )
         (begin
@@ -341,6 +379,9 @@
           (unwrap! (contract-call? .marketplace-storage add-cancelled-auction auction-id auction) marketplace-storage-error)
           ;; Delete the auction
           (unwrap! (contract-call? .marketplace-storage delete-auction auction-id) marketplace-storage-error)
+
+          (print (merge { action: "end-auction", auction-id: auction-id, reserve-price-met: false } auction))
+
           (ok { auction-id: auction-id, reserve-price-met: false })
         )
     )
@@ -370,6 +411,9 @@
                 (unwrap! (contract-call? .marketplace-storage add-cancelled-auction auction-id auction) marketplace-storage-error)
                 ;; Delete the auction
                 (unwrap! (contract-call? .marketplace-storage delete-auction auction-id) marketplace-storage-error)
+
+                (print (merge { action: "cancel-auction", auction-id: auction-id, highest-bidder: highest-bidder } auction))
+
                 (ok true)
             )
             (begin
@@ -377,6 +421,9 @@
                 (unwrap! (contract-call? .marketplace-storage add-cancelled-auction auction-id auction) marketplace-storage-error)
                 ;; Delete the auction
                 (unwrap! (contract-call? .marketplace-storage delete-auction auction-id) marketplace-storage-error)
+                
+                (print (merge { action: "cancel-auction", auction-id: auction-id, highest-bidder: none } auction))
+                
                 (ok true)
             )
         )
