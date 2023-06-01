@@ -5,8 +5,16 @@ authors = []
 telemetry = true
 cache_dir = '.\.cache'
 requirements = []
+
+[contracts.marketplace-storage]
+path = 'contracts/marketplace-storage.clar'
+
+[contracts.marketplace-trait]
+path = 'contracts/marketplace-trait.clar'
+
 [contracts.nft-marketplace]
 path = 'contracts/nft-marketplace.clar'
+depends_on = ['marketplace-trait', 'marketplace-storage']
 
 [contracts.sip010-ft-trait]
 path = "contracts/sip010-ft-trait.clar"
