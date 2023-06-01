@@ -24,7 +24,7 @@ jobs:
       uses: docker://hirosystems/clarinet:latest
       with:
         entrypoint: "bash"
-        args: -c "cd clarity && clarinet check"
+        args: -c "cd marketplace && clarinet check"
 
     - name: "Execute Clarinet test suite"
       uses: docker://hirosystems/clarinet:latest
