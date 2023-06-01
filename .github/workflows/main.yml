@@ -1,0 +1,38 @@
+name: Continuous integration
+on:
+  push:
+    branches: [ main ]
+  pull_request_target:
+    branches: [ main ]
+
+  workflow_dispatch:
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Cancel Previous Runs
+      uses: styfle/cancel-workflow-action@0.11.0
+      with:
+        access_token: ${{ github.token }}
+        
+    - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.PAT }}
+      
+    - name: Install modules
+      run: |
+        # run script
+        "npm i"
+
+    - name: "Check contracts"
+      uses: docker://hirosystems/clarinet:latest
+      with:
+        entrypoint: "bash"
+        args: -c "cd clarity && clarinet check"
+
+    - name: "Execute Clarinet test suite"
+      uses: docker://hirosystems/clarinet:latest
+      with:
+        entrypoint: "bash"
+        args: -c "cd marketplace && clarinet test"
