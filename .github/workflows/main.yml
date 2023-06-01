@@ -21,13 +21,13 @@ jobs:
         token: ${{ secrets.PAT }}
 
     - name: "Check contracts"
-      uses: docker://hirosystems/clarinet:latest
+      uses: docker://hirosystems/clarinet:1.4.0
       with:
         entrypoint: "bash"
         args: -c "clarinet check"
 
     - name: "Execute Clarinet test suite"
-      uses: docker://hirosystems/clarinet:latest
+      uses: docker://hirosystems/clarinet:1.4.0
       with:
         entrypoint: "bash"
         args: -c "clarinet test"
