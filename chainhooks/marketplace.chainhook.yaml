@@ -1,0 +1,29 @@
+
+---
+name: "Stacks hook"
+version: 1
+chain: stacks
+networks:
+    devnet:
+        predicate:
+            print-event:
+                contract-identifier: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.cbtc-token
+                contains: vault
+            # Also supports the following predicates:
+            # nft-event:
+            #     asset-identifier: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.cbtc-token::cbtc
+            #     actions: [mint, transfer, burn]
+            # ft-event:
+            #     asset-identifier: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.cbtc-token::cbtc
+            #     actions: [mint, transfer, burn]
+            # stx-event:
+            #     asset-identifier: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.cbtc-token::cbtc
+            #     actions: [mint, transfer, lock]
+            # contract-call:
+            #     contract-identifier: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.cbtc-token
+            #     method: mint
+        action:
+            http: 
+                url: http://localhost:3000/api/v1/<path>
+                method: POST
+                authorization-header: "Bearer cn389ncoiwuencr"
