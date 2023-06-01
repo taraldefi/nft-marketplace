@@ -4,6 +4,11 @@
 (use-trait ft-trait .sip010-ft-trait.sip010-ft-trait)
 
 ;; Constants and Errors
+
+(define-constant ERR_INVALID_ROLE (err u201))
+(define-constant ERR_INVALID_PRINCIPAL (err u202))
+(define-constant PERMISSION_DENIED_ERROR u403)
+
 (define-constant err-expiry-in-past (err u1000))
 (define-constant err-price-zero (err u1001))
 (define-constant err-unknown-listing (err u2000))
@@ -30,6 +35,28 @@
 (define-constant marketplace-storage-error (err u9001))
 
 
+;; Access Restrictions
+;; --------------------------------------------------------------------------
+(define-constant RESTRICTION_NONE u0) ;; No restriction detected
+(define-constant RESTRICTION_BLACKLIST u5) ;; Caller is on the blacklist
+
+;; Role Based Access Control
+;; --------------------------------------------------------------------------
+(define-constant OWNER_ROLE u0) ;; Can manage RBAC
+(define-constant BLACKLISTER_ROLE u4) ;; Can add principals to a blacklist that can prevent them listing assets on the marketplace, or buying the assets from the marketplace
+
+(define-data-var is-initialized bool false)
+
+;; Each role will have a mapping of principal to boolean.  A true "allowed" in the mapping indicates that the principal has the role.
+;; Each role will have special permissions to modify or manage specific capabilities in the contract.
+;; Note that adding/removing roles could be optimized by having just 1 function, but since this is sensitive functionality, it was split
+;;    into 2 separate functions to make it explicit.
+;; See the Readme about more details on the RBAC setup.
+(define-map roles { role: uint, account: principal } { allowed: bool })
+
+;; Blacklist mapping.  If an account has blacklisted = true then no transfers in or out are allowed
+(define-map blacklist { account: principal } { blacklisted: bool })
+
 ;; Version string
 (define-constant VERSION "0.0.5.beta")
 
@@ -37,14 +64,75 @@
 
 (define-data-var contract-paused bool false)
 
+;; Readonly Functions
+
+;; Checks if an account has the specified role
+(define-read-only (has-role (role-to-check uint) (principal-to-check principal))
+  (default-to false (get allowed (map-get? roles {role: role-to-check, account: principal-to-check}))))  
+
+
+;; Checks if an account is blacklisted
+(define-read-only (is-blacklisted (principal-to-check principal))
+  (default-to false (get blacklisted (map-get? blacklist { account: principal-to-check }))))
+
+;; Checks to see if a transfer should be restricted.  If so returns an error code that specifies restriction type.
+(define-read-only (detect-restriction (participant principal))
+  (if (is-blacklisted participant)
+    (err RESTRICTION_BLACKLIST)
+    (ok RESTRICTION_NONE)))
+
+(define-read-only (get-info)
+    (ok {
+        version: (get-version)
+    })
+)
+
 ;; Returns version of the safe contract
 ;; @returns string-ascii
 (define-read-only (get-version) 
     VERSION
 )
 
+
+;; Add a principal to the specified role
+;; Only existing principals with the OWNER_ROLE can modify roles
+(define-public (add-principal-to-role (role-to-add uint) (principal-to-add principal))   
+   (begin
+    (asserts! (> role-to-add u0) ERR_INVALID_ROLE)
+    (asserts! (is-some (some principal-to-add)) ERR_INVALID_PRINCIPAL)
+    ;; Check the contract-caller to verify they have the owner role
+    (asserts! (is-eq tx-sender (var-get contract-owner)) err-unauthorised)
+    ;; Print the action for any off chain watchers
+    (print { action: "add-principal-to-role", role-to-add: role-to-add, principal-to-add: principal-to-add })
+    (ok (map-set roles { role: role-to-add, account: principal-to-add } { allowed: true }))))
+
+;; Remove a principal from the specified role
+;; Only existing principals with the OWNER_ROLE can modify roles
+;; WARN: Removing all owners will irrevocably lose all ownership permissions
+(define-public (remove-principal-from-role (role-to-remove uint) (principal-to-remove principal))   
+   (begin
+    (asserts! (> role-to-remove u0) ERR_INVALID_ROLE)
+    (asserts! (is-some (some principal-to-remove)) ERR_INVALID_PRINCIPAL)
+    ;; Check the contract-caller to verify they have the owner role
+    (asserts! (is-eq tx-sender (var-get contract-owner)) err-unauthorised)
+    ;; Print the action for any off chain watchers
+    (print { action: "remove-principal-from-role", role-to-remove: role-to-remove, principal-to-remove: principal-to-remove })
+    (ok (map-set roles { role: role-to-remove, account: principal-to-remove } { allowed: false }))))
+
+;; Updates an account's blacklist status
+;; Only existing principals with the BLACKLISTER_ROLE can update blacklist status
+(define-public (update-blacklisted (principal-to-update principal) (set-blacklisted bool))
+  (begin
+    (asserts! (is-some (some principal-to-update)) ERR_INVALID_PRINCIPAL)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) err-unauthorised)
+    ;; Print the action for any off chain watchers
+    (print { action: "update-blacklisted", principal-to-update: principal-to-update, set-blacklisted: set-blacklisted })
+    (ok (map-set blacklist { account: principal-to-update } { blacklisted: set-blacklisted }))))
+
+
 (define-public (set-whitelisted (asset-contract principal) (whitelisted bool))
   (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) err-unauthorised)
     (unwrap! (contract-call? .marketplace-storage set-whitelisted asset-contract whitelisted) marketplace-storage-error)
     (ok true)
   )
@@ -66,11 +154,6 @@
   )
 )
 
-(define-read-only (get-info)
-    (ok {
-        version: (get-version)
-    })
-)
 
 ;; Private Functions
 (define-private (transfer-nft (token-contract <nft-trait>) (token-id uint) (sender principal) (recipient principal))
@@ -92,6 +175,9 @@
     (listing-id (contract-call? .marketplace-storage get-fixed-price-listing-nonce))
   )
     (asserts! (or (not (var-get contract-paused)) (is-eq tx-sender (var-get contract-owner))) err-contract-paused)
+    
+    (try! (detect-restriction tx-sender)) ;; Ensure there is no restriction
+
     (asserts! (contract-call? .marketplace-storage is-whitelisted (contract-of nft-asset-contract)) err-asset-contract-not-whitelisted)
     (asserts! (> (get price nft-asset) u0) err-price-zero)
 
@@ -114,6 +200,9 @@
     (listing (unwrap! (contract-call? .marketplace-storage get-fixed-price-listing listing-id) err-unknown-listing))
   )
     (asserts! (or (not (var-get contract-paused)) (is-eq tx-sender (var-get contract-owner))) err-contract-paused)
+
+    (try! (detect-restriction tx-sender)) ;; Ensure there is no restriction
+    
     ;; Transfer the stx from the buyer to the maker
     (try! (stx-transfer? (get price listing) tx-sender (get maker listing)))
     ;; Transfer the NFT to the buyer
@@ -131,6 +220,9 @@
     (listing (unwrap! (contract-call? .marketplace-storage get-fixed-price-listing listing-id) err-unknown-listing))
   )
     (asserts! (or (is-eq tx-sender (get maker listing)) (is-eq  tx-sender (var-get contract-owner))) err-unauthorised)
+
+    (try! (detect-restriction tx-sender)) ;; Ensure there is no restriction
+    
     (asserts! (or (not (var-get contract-paused)) (is-eq tx-sender (var-get contract-owner))) err-contract-paused)
     ;; Transfer the NFT back to the maker
     (try! (as-contract (transfer-nft nft-asset-contract (get token-id listing) tx-sender (get maker listing))))
@@ -146,6 +238,9 @@
     (auction-id (contract-call? .marketplace-storage get-auction-nonce))
   )
     (asserts! (or (not (var-get contract-paused)) (is-eq tx-sender (var-get contract-owner))) err-contract-paused)
+    
+    (try! (detect-restriction tx-sender)) ;; Ensure there is no restriction
+    
     (asserts! (contract-call? .marketplace-storage is-whitelisted (contract-of nft-asset-contract)) err-asset-contract-not-whitelisted)
 
     (asserts! (> (get end-block nft-asset) (get start-block nft-asset)) err-expiry-in-past)
@@ -171,7 +266,9 @@
     (auction (unwrap! (contract-call? .marketplace-storage get-auction auction-id) err-unknown-listing))
     (previous-bid (contract-call? .marketplace-storage get-previous-bid auction-id tx-sender ))
   )
-    (asserts! (not (var-get contract-paused)) err-contract-paused)
+    (asserts! (or (not (var-get contract-paused)) (is-eq tx-sender (var-get contract-owner))) err-contract-paused)
+    
+    (try! (detect-restriction tx-sender)) ;; Ensure there is no restriction
     ;; Check that the auction is still ongoing
     (asserts! (and (>= block-height (get start-block auction)) (<= block-height (get end-block auction))) err-auction-ended)
     ;; Check that the bid is higher than the current highest bid
@@ -217,6 +314,8 @@
     (auction (unwrap! (contract-call? .marketplace-storage get-auction auction-id) err-unknown-listing))
   )
     (asserts! (or (not (var-get contract-paused)) (is-eq tx-sender (var-get contract-owner))) err-contract-paused)
+    
+    (try! (detect-restriction tx-sender)) ;; Ensure there is no restriction
     ;; Check that the auction has ended
     (asserts! (> block-height (get end-block auction)) err-auction-not-ended)
      ;; Check if the reserve price has been met
@@ -253,6 +352,8 @@
     (auction (unwrap! (contract-call? .marketplace-storage get-auction auction-id) err-unknown-listing))
   )
     (asserts! (or (not (var-get contract-paused)) (is-eq tx-sender (var-get contract-owner))) err-contract-paused)
+    
+    (try! (detect-restriction tx-sender)) ;; Ensure there is no restriction
 
     ;; Check that the auction has not ended and the sender is the maker
     (asserts! (and (<= block-height (get end-block auction)) (or (is-eq tx-sender (get maker auction)) (is-eq tx-sender (var-get contract-owner)))) err-unauthorised)
@@ -281,3 +382,18 @@
         )
   )
 )
+
+
+;; Initialization
+;; --------------------------------------------------------------------------
+
+;; Check to ensure that the same account that deployed the contract is initializing it
+;; Only allow this funtion to be called once by checking "is-initialized"
+(define-public (initialize (name-to-set (string-ascii 32)) (symbol-to-set (string-ascii 32) ) (decimals-to-set uint) (initial-owner principal))
+  (begin
+    (asserts! (is-some (some initial-owner)) ERR_INVALID_PRINCIPAL)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) err-unauthorised)
+    (asserts! (not (var-get is-initialized)) (err PERMISSION_DENIED_ERROR))
+    (var-set is-initialized true) ;; Set to true so that this can't be called again
+    (map-set roles { role: OWNER_ROLE, account: initial-owner } { allowed: true })
+    (ok true)))
