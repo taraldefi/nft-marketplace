@@ -24,10 +24,10 @@ jobs:
       uses: docker://hirosystems/clarinet:latest
       with:
         entrypoint: "bash"
-        args: -c "cd marketplace && clarinet check"
+        args: -c "clarinet check"
 
     - name: "Execute Clarinet test suite"
       uses: docker://hirosystems/clarinet:latest
       with:
         entrypoint: "bash"
-        args: -c "cd marketplace && clarinet test"
+        args: -c "clarinet test"

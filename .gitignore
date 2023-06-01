@@ -396,3 +396,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+**/settings/Mainnet.toml
+**/settings/Testnet.toml
+.cache/**
+history.txt
