@@ -1,5 +1,16 @@
-import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v1.4.0/index.ts';
-import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
+// deno-lint-ignore-file no-explicit-any
+// @ts-ignore Suppressing "The import path cannot end with a '.ts' extension"
+import { Clarinet } from "../src/dependencies.ts";
+// @ts-ignore Suppressing "The import path cannot end with a '.ts' extension"
+import { Tx } from "../src/dependencies.ts";
+// @ts-ignore Suppressing "The import path cannot end with a '.ts' extension"
+import { Chain } from "../src/dependencies.ts";
+// @ts-ignore Suppressing "The import path cannot end with a '.ts' extension"
+import { Account } from "../src/dependencies.ts";
+// @ts-ignore Suppressing "The import path cannot end with a '.ts' extension"
+import { types } from "../src/dependencies.ts";
+// @ts-ignore Suppressing "The import path cannot end with a '.ts' extension"
+import { assertEquals } from "../src/dependencies.ts";
 
 Clarinet.test({
   name: "Ensure that we can start an auction",
