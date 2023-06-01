@@ -19,11 +19,6 @@ jobs:
     - uses: actions/checkout@v3
       with:
         token: ${{ secrets.PAT }}
-      
-    - name: Install modules
-      run: |
-        # run script
-        "npm i"
 
     - name: "Check contracts"
       uses: docker://hirosystems/clarinet:latest
