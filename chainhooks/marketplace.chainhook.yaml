@@ -7,8 +7,8 @@ networks:
     devnet:
         predicate:
             print-event:
-                contract-identifier: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.cbtc-token
-                contains: vault
+                contract-identifier: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.nft-marketplace
+                contains: action
             # Also supports the following predicates:
             # nft-event:
             #     asset-identifier: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.cbtc-token::cbtc

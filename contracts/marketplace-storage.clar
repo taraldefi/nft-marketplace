@@ -112,89 +112,73 @@
 )
 
 (define-read-only (get-fixed-price-listing-nonce)
-    (var-get fixed-price-nonce)
+  (var-get fixed-price-nonce)
 )
 
 (define-read-only (get-fixed-price-listing (listing-id uint))
-    (map-get? fixed-price-listings listing-id)
+  (map-get? fixed-price-listings listing-id)
 )
 
 (define-read-only (get-auction-nonce)
-    (var-get auction-nonce)
+  (var-get auction-nonce)
 )
 
 (define-read-only (get-previous-bid (auction-id uint) (bidder principal))
-    (default-to u0 (map-get? bids { auction-id: auction-id, bidder: bidder }))
+  (default-to u0 (map-get? bids { auction-id: auction-id, bidder: bidder }))
 )
 
 ;; Public Functions
 (define-public (increment-fixed-price-nonce)
-  (begin
-    (var-set fixed-price-nonce (+ (var-get fixed-price-nonce) u1))
-    (ok true)
-  )
+  (ok (var-set fixed-price-nonce (+ (var-get fixed-price-nonce) u1)))
 )
 
 (define-public (increment-auction-nonce)
-  (begin
-    (var-set auction-nonce (+ (var-get auction-nonce) u1))
-    (ok true)
-  )
+  (ok (var-set auction-nonce (+ (var-get auction-nonce) u1)))
 )
 
 (define-public (set-whitelisted (asset-contract principal) (whitelisted bool))
-  (begin
-    (ok (map-set whitelisted-asset-contracts asset-contract whitelisted))
-  )
+  (ok (map-set whitelisted-asset-contracts asset-contract whitelisted))
 )
 
 (define-public (set-owner (new-owner principal))
-  (begin
-    (var-set contract-owner new-owner)
-    (ok true)
-  )
+  (ok (var-set contract-owner new-owner))
 )
 
 (define-public (add-fixed-price-listing (listing-id uint) (listing { maker: principal, token-id: uint, nft-asset-contract: principal, price: uint }))
-  (begin
+  (ok
     (map-set fixed-price-listings listing-id {
         maker: (get maker listing), 
         nft-asset-contract: (get nft-asset-contract listing), 
         token-id: (get token-id listing), price: (get price listing)
     })
-    (ok true)
   )
 )
 
 
 
 (define-public (add-completed-fixed-price-listing (listing-id uint) (listing { maker: principal, token-id: uint, nft-asset-contract: principal, price: uint }))
-  (begin
+  (ok
     (map-set completed-fixed-price-listings listing-id {
         maker: (get maker listing), 
         nft-asset-contract: (get nft-asset-contract listing), 
         token-id: (get token-id listing), price: (get price listing)
     })
-    (ok true)
   )
 )
 
 (define-public (add-cancelled-fixed-price-listing (listing-id uint) (listing { maker: principal, token-id: uint, nft-asset-contract: principal, price: uint }))
-  (begin
+  (ok
     (map-set cancelled-fixed-price-listings listing-id {
         maker: (get maker listing), 
         nft-asset-contract: (get nft-asset-contract listing), 
         token-id: (get token-id listing), price: (get price listing)
     })
-    (ok true)
   )
 )
 
 (define-public (remove-fixed-price-listing (listing-id uint))
-    (begin
-        (map-delete fixed-price-listings listing-id)
-        (ok true)
-    )
+
+  (ok (map-delete fixed-price-listings listing-id))
 )
 
 (define-public (add-auction (auction-id uint) (auction {
@@ -208,7 +192,7 @@
     highest-bid: uint,
     highest-bidder: (optional principal)
   }))
- (begin
+ (ok
     (map-set auctions auction-id {
         maker: (get maker auction), 
         nft-asset-contract: (get nft-asset-contract auction), 
@@ -220,9 +204,7 @@
         highest-bid: (get highest-bid auction), 
         highest-bidder: (get highest-bidder auction)
     })
-
-    (ok true)
- )
+  )
 )
 
 (define-public (add-completed-auction (auction-id uint) (auction {
@@ -236,7 +218,7 @@
     highest-bid: uint,
     highest-bidder: (optional principal)
   }))
- (begin
+ (ok
     (map-set completed-auctions auction-id {
         maker: (get maker auction), 
         nft-asset-contract: (get nft-asset-contract auction), 
@@ -248,9 +230,7 @@
         highest-bid: (get highest-bid auction), 
         highest-bidder: (get highest-bidder auction)
     })
-
-    (ok true)
- )
+  )
 )
 
 (define-public (add-cancelled-auction (auction-id uint) (auction {
@@ -264,7 +244,7 @@
     highest-bid: uint,
     highest-bidder: (optional principal)
   }))
- (begin
+ (ok
     (map-set cancelled-auctions auction-id {
         maker: (get maker auction), 
         nft-asset-contract: (get nft-asset-contract auction), 
@@ -276,9 +256,7 @@
         highest-bid: (get highest-bid auction), 
         highest-bidder: (get highest-bidder auction)
     })
-
-    (ok true)
- )
+  )
 )
 
 (define-public (update-auction (auction-id uint) (auction {
@@ -292,7 +270,7 @@
     highest-bid: uint,
     highest-bidder: (optional principal)
   }))
- (begin
+ (ok
     (map-set auctions auction-id {
         maker: (get maker auction), 
         nft-asset-contract: (get nft-asset-contract auction), 
@@ -304,35 +282,21 @@
         highest-bid: (get highest-bid auction), 
         highest-bidder: (get highest-bidder auction)
     })
-
-    (ok true)
- )
+  )
 )
 
 (define-public (add-bid (key { auction-id: uint, bidder: principal }) (amount  uint))
-    (begin
-        (map-set bids { auction-id: (get auction-id key), bidder: (get bidder key) } amount)
-        (ok true)
-    )
+  (ok (map-set bids { auction-id: (get auction-id key), bidder: (get bidder key) } amount))
 )
 
 (define-public (add-withdrawn-bid (key { auction-id: uint, bidder: principal }) (amount  uint))
-    (begin
-        (map-set withdrawn-bids { auction-id: (get auction-id key), bidder: (get bidder key) } amount)
-        (ok true)
-    )
+  (ok (map-set withdrawn-bids { auction-id: (get auction-id key), bidder: (get bidder key) } amount))
 )
 
 (define-public (delete-bid (key { auction-id: uint, bidder: principal }))
-    (begin
-        (map-delete bids { auction-id: (get auction-id key), bidder: (get bidder key) })
-        (ok true)
-    )
+  (ok (map-delete bids { auction-id: (get auction-id key), bidder: (get bidder key) }))
 )
 
 (define-public (delete-auction (auction-id uint))
-    (begin
-        (map-delete auctions auction-id)
-        (ok true)
-    )
+  (ok (map-delete auctions auction-id))
 )
