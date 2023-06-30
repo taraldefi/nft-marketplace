@@ -31,7 +31,10 @@ class InnerStaticBearerStrategy extends PassportStrategy {
     }
 
     authenticate(req: Request, options?: Object): void {
+        console.log('GOT A HIT');
         let apiKey: string = _.get(req.headers, this.staticAuthorizationHeader.header) as string;
+
+        console.log(JSON.stringify(req.headers));
         if (!apiKey) {
             return this.fail(new BadRequestError('Missing static bearer key'), null);
         }
