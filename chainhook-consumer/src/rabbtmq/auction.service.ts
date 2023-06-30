@@ -10,6 +10,12 @@ export class AuctionPublisherService {
     ) {}
 
     async publishMessage(pattern: string, message: string): Promise<void> {
-        await this.client.emit(pattern, message).toPromise();
+
+        console.log(`Publishing message: ${message}`);
+        console.log('Publishing message to pattern: ' + pattern);
+
+        await this.client.emit(pattern, message).toPromise().catch(err => {
+            console.error(`Error while emitting message: ${JSON.stringify(err)}`);
+          });;
     }
 }

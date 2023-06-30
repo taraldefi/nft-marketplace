@@ -12,7 +12,7 @@ export class AppController {
 
   
   @Post('chainhook')
-  chainhook(@Body() body: any): void {
+  async chainhook(@Body() body: any): Promise<void> {
     const chainhook = body as ChainhookResponse;
 
     const printEvents: Event[] = [];
@@ -36,7 +36,7 @@ export class AppController {
       const printPayloadCV = deserializeCV(Buffer.from(hexData, "hex"));
       const printPayload = cvToValue(printPayloadCV);
       
-      this.auctionPublishingService.publishMessage('auction_event', JSON.stringify(printPayload));
+      await this.auctionPublishingService.publishMessage('auction_event', JSON.stringify(printPayload));
     }
   }
 }
