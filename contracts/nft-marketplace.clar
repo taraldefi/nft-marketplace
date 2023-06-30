@@ -280,6 +280,7 @@
 
     (print (merge { 
       action: "start-auction",
+      auction-id: auction-id,
       maker: tx-sender, 
       nft-asset-contract: (contract-of nft-asset-contract), 
       highest-bid: u0, 
