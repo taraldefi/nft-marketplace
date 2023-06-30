@@ -23,3 +23,10 @@ The contract leverages traits (.sip009-nft-trait.nft-trait and .sip010-ft-trait.
 In addition to that, the nft marketplace showcases some best practices such as `ownership management` and `separation of contract logic from data`
 
 Separation of contract logic and data is extremely important in the case of versioning and upgreadability. In case we upgrade the marketplace contract, we do not need to do data migration.
+
+
+## Tests
+
+* Run normal tests with `clarinet test`
+
+* Run chainhook tests with `clarinet test --chainhooks ./chainhooks/marketplace.chainhook.yaml ./tests_chainhook/integration_test.ts`
