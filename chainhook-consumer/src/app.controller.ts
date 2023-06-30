@@ -7,8 +7,9 @@ import { ApiKeyAuthGuard } from './auth/guard/apikey-auth.guard';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  
+  @Post('chainhook')
+  chainhook(@Body() body: any): void {
+    console.log(JSON.stringify(body));
   }
 }
