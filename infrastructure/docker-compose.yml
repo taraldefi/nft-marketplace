@@ -84,7 +84,7 @@ services:
       - GF_SERVER_CERT_FILE=/etc/grafana/certs/server.crt
       - GF_SERVER_CERT_KEY=/etc/grafana/certs/server.key
     ports:
-      - 3000:3000
+      - 3001:3000
     networks:
       - rabbitmq-cluster
 networks:
