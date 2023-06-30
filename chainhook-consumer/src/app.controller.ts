@@ -1,16 +1,14 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { AppService } from './app.service';
-import { ApiKeyAuthGuard } from './auth/guard/apikey-auth.guard';
-import { Chainhook } from './chainhook/Chainhook';
 import { ChainhookResponse } from './chainhook/ChainhookResponse';
 import { Event } from './chainhook/Event';
 import { cvToValue, deserializeCV } from "@stacks/transactions";
+import { AuctionPublisherService } from './rabbtmq/auction.service';
 
 
 // @UseGuards(ApiKeyAuthGuard)
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly auctionPublishingService: AuctionPublisherService) {}
 
   
   @Post('chainhook')
@@ -37,8 +35,8 @@ export class AppController {
       const hexData = printEvent.data.raw_value.replace('0x', '');
       const printPayloadCV = deserializeCV(Buffer.from(hexData, "hex"));
       const printPayload = cvToValue(printPayloadCV);
-      console.log(printPayload);
+      
+      this.auctionPublishingService.publishMessage('auction_event', JSON.stringify(printPayload));
     }
-
   }
 }

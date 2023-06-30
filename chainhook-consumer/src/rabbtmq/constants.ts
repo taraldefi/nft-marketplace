@@ -7,7 +7,7 @@ export const rabbitMQServiceOptions = {
     transport: Transport.RMQ,
     options: {
         urls: ['amqp://localhost:5672'],
-        queue: 'test_queue',
+        queue: 'chainhook_queue',
         queueOptions: {
             durable: false,
         },
