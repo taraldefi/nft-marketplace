@@ -400,3 +400,5 @@ FodyWeavers.xsd
 **/settings/Testnet.toml
 .cache/**
 history.txt
+
+.chainhook-subscriber/node_modules/*
