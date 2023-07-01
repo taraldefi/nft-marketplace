@@ -28,10 +28,13 @@
     "@nestjs/platform-express": "^10.0.4",
     "@nestjs/typeorm": "^10.0.0",
     "amqplib": "^0.10.3",
+    "class-transformer": "^0.5.1",
+    "cls-hooked": "^4.2.2",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
-    "typeorm": "^0.3.17"
+    "typeorm": "0.2.43",
+    "typeorm-seeding": "^1.6.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",
