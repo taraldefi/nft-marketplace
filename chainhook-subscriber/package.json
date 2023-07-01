@@ -22,13 +22,16 @@
   },
   "dependencies": {
     "@nestjs/common": "^10.0.4",
+    "@nestjs/config": "^3.0.0",
     "@nestjs/core": "^10.0.4",
     "@nestjs/microservices": "^10.0.4",
     "@nestjs/platform-express": "^10.0.4",
+    "@nestjs/typeorm": "^10.0.0",
     "amqplib": "^0.10.3",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "rxjs": "^7.2.0"
+    "rxjs": "^7.2.0",
+    "typeorm": "^0.3.17"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",
