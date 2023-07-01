@@ -30,22 +30,6 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe(validationOptions));
 
-  app.use(cookieParser());
-
-  const options = new DocumentBuilder()
-    .setTitle('Taral API')
-    .setDescription('Taral API docs')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-
-  const document = SwaggerModule.createDocument(app, options);
-  if (process.env.NODE_ENV === 'development') {
-    fs.writeFileSync('./swagger-spec.json', JSON.stringify(document));
-  }
-
-  SwaggerModule.setup('docs', app, document);
-
   const port = configService.get('app.port');
 
   await app.listen(port);

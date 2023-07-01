@@ -13,14 +13,13 @@ import databaseConfig from './config/database.config';
       isGlobal: true,
       load: [
         databaseConfig,
-        appConfig,
+        appConfig
       ],
       envFilePath: ['.env'],
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
-    }),
-
+    })
   ],
   controllers: [AppController],
   providers: [AppService],
