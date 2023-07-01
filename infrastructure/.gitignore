@@ -412,3 +412,4 @@ grafana/certs/server.key
 grafana/certs/server.csr
 
 .env
+.data/*
