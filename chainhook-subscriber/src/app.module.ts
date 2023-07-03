@@ -6,6 +6,8 @@ import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { ConfigModule } from '@nestjs/config';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
+import { AuctionModule } from './modules/auctions/auction.module';
+import { AuctionHistoryModule } from './modules/auctionhistory/auction.history.module';
 
 @Module({
   imports: [
@@ -19,7 +21,9 @@ import databaseConfig from './config/database.config';
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
-    })
+    }),
+    AuctionModule,
+    AuctionHistoryModule
   ],
   controllers: [AppController],
   providers: [AppService],

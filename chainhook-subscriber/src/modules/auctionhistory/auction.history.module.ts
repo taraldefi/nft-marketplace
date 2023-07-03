@@ -3,6 +3,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuctionHistoryEntity } from './entities/auction.history.entity';
 import { AuctionBidHistoryEntity } from './entities/auction.bid.history.entity';
+import { AuctionHistoryController } from './controllers/auction.history.controller';
+import { AuctionHistoryService } from './services/auction.history.service';
+import { AuctionSubscriberController } from './controllers/auction.subscriber.controller';
 
 @Module({
   imports: [
@@ -10,10 +13,11 @@ import { AuctionBidHistoryEntity } from './entities/auction.bid.history.entity';
         AuctionHistoryEntity, AuctionBidHistoryEntity
     ]),
   ],
-  controllers: [],
+  controllers: [AuctionHistoryController, AuctionSubscriberController],
   providers: [
     ConfigModule,
-    ConfigService
+    ConfigService,
+    AuctionHistoryService
   ],
 })
 export class AuctionHistoryModule {}
