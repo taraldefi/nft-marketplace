@@ -6,11 +6,8 @@ import {
   } from 'typeorm';
   
   export abstract class BaseHistory {
-    @PrimaryGeneratedColumn()
-    id: number;
-  
-    @Column()
-    userId: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
   
     @Column()
     @Check(`"action" IN ('insert', 'update', 'delete')`)
@@ -18,4 +15,7 @@ import {
   
     @CreateDateColumn()
     createdAt: Date;
+
+    @Column('json', { default: {} })
+    changes: any;
   }
