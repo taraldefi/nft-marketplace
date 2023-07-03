@@ -30,7 +30,6 @@ export class AuctionBidEntitySubscriber implements EntitySubscriberInterface<Auc
     bidHistory.action = bid.amount;
     bidHistory.changes = updatedColumns.map(column => ({ name: column.propertyName, new_value: bid[column.propertyName] }));
 
-    // Notice that we're using event.manager here.
     await event.manager.save(bidHistory);
   }
 }
