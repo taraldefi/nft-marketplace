@@ -11,7 +11,7 @@ import { AuctionHistoryService } from '../services/auction.history.service';
   path: 'auctionhistory',
   version: '1',
 })
-export class EntityController {
+export class AuctionHistoryController {
   constructor(private readonly service: AuctionHistoryService) {}
 
   @Get('/:id')
