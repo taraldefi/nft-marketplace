@@ -4,7 +4,7 @@ import { AuctionStatus } from 'src/modules/auctions/entities/auction.status';
 import { Allow } from 'class-validator';
 
 @Entity('auctions_history')
-export class AuctionHistory extends BaseHistory {
+export class AuctionHistoryEntity extends BaseHistory {
   @Column()
   @Allow()
   auctionId: number;

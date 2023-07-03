@@ -5,7 +5,7 @@ import { BaseHistory } from "src/modules/history/entities/base.history.entity";
 import { Column, Entity } from "typeorm";
 
 @Entity('auction_bids_history')
-export class AuctionBidHistory extends BaseHistory {
+export class AuctionBidHistoryEntity extends BaseHistory {
   @Column()
   @Allow()
   auctionId: number;
