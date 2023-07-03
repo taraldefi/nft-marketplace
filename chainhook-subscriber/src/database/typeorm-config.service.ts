@@ -9,11 +9,14 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
 
   createTypeOrmOptions(): TypeOrmModuleOptions {
     const entitiesPath = __dirname + '/../**/*.entity{.ts,.js}';
+    const subscribersPath = __dirname + '/../**/*.subscriber{.ts,.js}';
     const migrationPath = __dirname + '/migrations/**/*{.ts,.js}';
     const seedsPath = __dirname + '/seeds/**/*{.ts,.js}';
     const factoriesPath = __dirname + '/factories/**/*{.ts,.js}';
 
     const entitiesRelativePath = path.relative(process.cwd(), entitiesPath);
+    
+    const subscribersRelativePath = path.relative(process.cwd(), subscribersPath);
     const migrationsRelativePath = path.relative(process.cwd(), migrationPath);
     const seedsRelativePath = path.relative(process.cwd(), seedsPath);
     const factoriesRelativePath = path.relative(process.cwd(), factoriesPath);
@@ -34,6 +37,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       logging: this.configService.get('app.nodeEnv') !== 'production',
       entities: [entitiesRelativePath],
       migrations: [migrationsRelativePath],
+      subscribers: [subscribersRelativePath],
       seeds: [seedsRelativePath],
       factories: [factoriesRelativePath],
       cli: {
