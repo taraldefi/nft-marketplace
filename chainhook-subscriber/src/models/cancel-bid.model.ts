@@ -1,3 +1,6 @@
+import { Action } from "./action.model";
+import { Highestbidder } from "./highest-bidder.model";
+
 export interface CancelBid {
     action: Action;
     'auction-id': Action;
@@ -11,14 +14,4 @@ export interface CancelBid {
     'start-block': Action;
     'token-id': Action;
     type: Action;
-}
-
-export interface Highestbidder {
-    type: string;
-    value: Action;
-}
-
-export interface Action {
-    type: string;
-    value: string;
 }

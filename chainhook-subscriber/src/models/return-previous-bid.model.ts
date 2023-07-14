@@ -1,3 +1,6 @@
+import { Action } from "./action.model";
+import { Highestbidder } from "./highest-bidder.model";
+
 interface ReturnPreviousBid {
     action: Action;
     'auction-id': Action;
@@ -14,12 +17,3 @@ interface ReturnPreviousBid {
     'token-id': Action;
 }
 
-interface Highestbidder {
-    type: string;
-    value: Action;
-}
-
-interface Action {
-    type: string;
-    value: string;
-}

@@ -1,16 +1,9 @@
+import { Action } from "./action.model";
+import { Whitelisted } from "./whitelisted.model";
+
 export interface Whitelist {
     action: Action;
     "asset-contract": Action;
     type: Action;
     whitelisted: Whitelisted;
-}
-
-export interface Action {
-    type: string;
-    value: string;
-}
-
-export interface Whitelisted {
-    type: string;
-    value: boolean;
 }
