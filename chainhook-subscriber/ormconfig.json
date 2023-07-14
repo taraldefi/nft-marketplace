@@ -15,6 +15,9 @@
   "migrations": [
     "src\\database\\migrations\\**\\*{.ts,.js}"
   ],
+  "subscribers": [
+    "src\\**\\*.subscriber{.ts,.js}"
+  ],
   "seeds": [
     "src\\database\\seeds\\**\\*{.ts,.js}"
   ],
