@@ -12,14 +12,14 @@ interface ReturnPreviousBid {
     'start-bid': Action;
     'start-block': Action;
     'token-id': Action;
-  }
-  
-  interface Highestbidder {
+}
+
+interface Highestbidder {
     type: string;
     value: Action;
-  }
-  
-  interface Action {
+}
+
+interface Action {
     type: string;
     value: string;
-  }
+}

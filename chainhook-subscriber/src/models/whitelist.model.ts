@@ -1,16 +1,16 @@
 export interface Whitelist {
-    action:           Action;
+    action: Action;
     "asset-contract": Action;
-    type:             Action;
-    whitelisted:      Whitelisted;
+    type: Action;
+    whitelisted: Whitelisted;
 }
 
 export interface Action {
-    type:  string;
+    type: string;
     value: string;
 }
 
 export interface Whitelisted {
-    type:  string;
+    type: string;
     value: boolean;
 }

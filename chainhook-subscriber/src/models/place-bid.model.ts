@@ -14,12 +14,12 @@ export interface PlaceBid {
     'token-id': Action;
     type: Action;
 }
-  
+
 export interface Highestbidder {
     type: string;
     value?: any;
 }
-  
+
 export interface Action {
     type: string;
     value: string;

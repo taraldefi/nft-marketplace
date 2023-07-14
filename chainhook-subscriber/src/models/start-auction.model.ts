@@ -11,14 +11,14 @@ export interface StartAuction {
     'start-block': Action;
     'token-id': Action;
     type: Action;
-  }
-  
-  export interface Highestbidder {
+}
+
+export interface Highestbidder {
     type: string;
     value?: any;
-  }
-  
-  export interface Action {
+}
+
+export interface Action {
     type: string;
     value: string;
-  }
+}
