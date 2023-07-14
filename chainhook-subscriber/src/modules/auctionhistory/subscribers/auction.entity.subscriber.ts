@@ -1,40 +1,23 @@
 import { AuctionEntity } from "src/modules/auctions/entities/auction.entity";
-import { Connection, EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent } from "typeorm";
+import { Connection, EventSubscriber } from "typeorm";
 import { AuctionHistoryEntity } from "../entities/auction.history.entity";
+import { BaseHistorySubscriber } from "src/modules/history/subscribers/base.subscriber";
 
 @EventSubscriber()
-export class AuctionEntitySubscriber implements EntitySubscriberInterface<AuctionEntity> {
+export class AuctionEntitySubscriber extends BaseHistorySubscriber<AuctionEntity, AuctionHistoryEntity> {
   constructor(connection: Connection) {
-    connection.subscribers.push(this);
+    super(connection, AuctionEntity, AuctionHistoryEntity);
   }
 
-  listenTo() {
-    return AuctionEntity;
-  }
+  protected copyEntityToHistory(entity: AuctionEntity, history: AuctionHistoryEntity): void {
+    history.auctionId = entity.auctionId;
+    history.endBlock = entity.endBlock;
+    history.createdAt = new Date();
 
-  afterInsert(event: InsertEvent<AuctionEntity>) {
-    this.insertIntoHistory(event.entity, event.manager, 'insert');
-  }
+    history.highestBid = entity.highestBid;
 
-  afterUpdate(event: UpdateEvent<AuctionEntity>) {
-    this.insertIntoHistory(event.entity as AuctionEntity, event.manager, 'update', event.updatedColumns);
-  }
-
-  private async insertIntoHistory(auction: AuctionEntity, manager: any, action: 'insert' | 'update', updatedColumns = []) {
-    const auctionHistory = new AuctionHistoryEntity();
-    auctionHistory.auctionId = auction.auctionId;
-    auctionHistory.endBlock = auction.endBlock;
-    auctionHistory.createdAt = new Date();
-
-    auctionHistory.highestBid = auction.highestBid;
-
-    auctionHistory.highestBidder = auction.highestBidder;
-    auctionHistory.nftAsset = auction.nftAsset;
-    auctionHistory.status = auction.status;
-
-    auctionHistory.action = action;
-
-    auctionHistory.changes = updatedColumns.map(column => ({ name: column.propertyName, new_value: auction[column.propertyName] }));
-    await manager.save(auctionHistory);
+    history.highestBidder = entity.highestBidder;
+    history.nftAsset = entity.nftAsset;
+    history.status = entity.status;
   }
 }

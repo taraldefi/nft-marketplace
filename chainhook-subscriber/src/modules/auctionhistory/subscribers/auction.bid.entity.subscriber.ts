@@ -1,35 +1,18 @@
 import { AuctionBidEntity } from "src/modules/auctions/entities/auction.bid.entity";
-import { Connection, EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent } from "typeorm";
+import { Connection, EventSubscriber } from "typeorm";
 import { AuctionBidHistoryEntity } from "../entities/auction.bid.history.entity";
+import { BaseHistorySubscriber } from "src/modules/history/subscribers/base.subscriber";
 
 @EventSubscriber()
-export class AuctionBidEntitySubscriber implements EntitySubscriberInterface<AuctionBidEntity> {
+export class AuctionBidEntitySubscriber extends BaseHistorySubscriber<AuctionBidEntity, AuctionBidHistoryEntity> {
   constructor(connection: Connection) {
-    connection.subscribers.push(this);
+    super(connection, AuctionBidEntity, AuctionBidHistoryEntity);
   }
 
-  listenTo() {
-    return AuctionBidEntity;
-  }
-
-  afterInsert(event: InsertEvent<AuctionBidEntity>) {
-    this.insertIntoHistory(event, 'insert');
-  }
-
-  afterUpdate(event: UpdateEvent<AuctionBidEntity>) {
-    this.insertIntoHistory(event, 'update', event.updatedColumns);
-  }
-
-  private async insertIntoHistory(event: InsertEvent<AuctionBidEntity> | UpdateEvent<AuctionBidEntity>, action: 'insert' | 'update', updatedColumns = []) {
-    const bid = event.entity;
-    const bidHistory = new AuctionBidHistoryEntity();
-    bidHistory.auctionId = bid.auction.auctionId;
-    bidHistory.action = action;
-    bidHistory.createdAt = new Date();
-    bidHistory.bidder = bid.bidder;
-    bidHistory.action = bid.amount;
-    bidHistory.changes = updatedColumns.map(column => ({ name: column.propertyName, new_value: bid[column.propertyName] }));
-
-    await event.manager.save(bidHistory);
+  protected copyEntityToHistory(entity: AuctionBidEntity, history: AuctionBidHistoryEntity): void {
+    history.auctionId = entity.auction.auctionId;
+    history.createdAt = new Date();
+    history.bidder = entity.bidder;
+    history.amount = entity.amount;
   }
 }
