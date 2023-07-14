@@ -18,5 +18,4 @@ export class Entities1689343471464 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "auctions_history"`);
         await queryRunner.query(`DROP TYPE "public"."auctions_history_status_enum"`);
     }
-
 }
