@@ -37,7 +37,7 @@ import {
     private async insertIntoHistory(entity: T, action: H['action']) {
       const history = new this.history();
       history.action = action;
-      history.userId = entity.id;  // assuming that entity.id is the user ID
+      history.createdAt = new Date();
       this.copyEntityToHistory(entity, history);
       await this.connection.manager.save(history);
     }

@@ -10,6 +10,11 @@ import { AuctionPublisherService } from './rabbtmq/auction.service';
 export class AppController {
   constructor(private readonly auctionPublishingService: AuctionPublisherService) {}
 
+  @Get()
+  getHello(): string {
+    return 'Hello World!';
+  }
+
   
   @Post('chainhook')
   async chainhook(@Body() body: any): Promise<void> {
@@ -35,6 +40,10 @@ export class AppController {
       const hexData = printEvent.data.raw_value.replace('0x', '');
       const printPayloadCV = deserializeCV(Buffer.from(hexData, "hex"));
       const printPayload = cvToValue(printPayloadCV);
+
+      console.log(JSON.stringify(printPayload));
+
+      console.log('---------------------------------------');
       
       await this.auctionPublishingService.publishMessage('auction_event', JSON.stringify(printPayload));
     }
