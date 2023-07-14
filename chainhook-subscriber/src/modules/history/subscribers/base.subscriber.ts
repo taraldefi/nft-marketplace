@@ -21,20 +21,22 @@ import {
     }
   
     afterInsert(event: InsertEvent<T>) {
-      this.insertIntoHistory(event.entity, 'insert');
+      this.insertIntoHistory(event, 'insert');
     }
   
     afterUpdate(event: UpdateEvent<T>) {
-      this.insertIntoHistory(event.entity as T, 'update', event.updatedColumns);
+      this.insertIntoHistory(event, 'update', event.updatedColumns);
     }
   
     afterRemove(event: RemoveEvent<T>) {
-      this.insertIntoHistory(event.entity, 'delete');
+      this.insertIntoHistory(event, 'delete');
     }
   
     protected abstract copyEntityToHistory(entity: T, history: H): void;
   
-    private async insertIntoHistory(entity: T, action: H['action'], updatedColumns = []) {
+    private async insertIntoHistory(event: InsertEvent<T> | UpdateEvent<T> | RemoveEvent<T>, action: H['action'], updatedColumns = []) {
+      const entity = event.entity as T;
+
       const history = new this.history();
       history.action = action;
       history.createdAt = new Date();
@@ -43,5 +45,12 @@ import {
 
       this.copyEntityToHistory(entity, history);
       await this.connection.manager.save(history);
+    }
+
+    protected getEntityChanges(event: UpdateEvent<T>): Array<{ name: string, new_value: any }> {
+      return event.updatedColumns.map(column => ({
+        name: column.propertyName,
+        new_value: column.getEntityValue(event.entity),
+      }));
     }
   }
