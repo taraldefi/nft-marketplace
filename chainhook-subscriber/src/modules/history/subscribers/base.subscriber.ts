@@ -13,7 +13,6 @@ import {
       protected entity: new () => T,
       protected history: new () => H
     ) {
-      connection.subscribers.push(this);
     }
   
     listenTo() {
