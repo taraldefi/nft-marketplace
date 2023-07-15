@@ -8,8 +8,22 @@ export const rabbitMQServiceOptions = {
     options: {
         urls: ['amqp://admin:supersecretpassword@localhost:5672'],
         queue: 'chainhook_queue',
+        queues: [
+            {
+                name: 'chainhook_queue',
+                queueOptions: {
+                durable: false
+                },
+                bindings: [
+                {
+                    exchange: 'amq.direct', // default exchange
+                    routingKeys: [ 'auction_event' ],
+                },
+                ],
+            },
+        ],
         queueOptions: {
-            durable: false,
+            durable: false, noAck: true
         },
     },
 };
