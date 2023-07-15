@@ -1,15 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Inject, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { AuctionHistoryEntity } from '../entities/auction.history.entity';
 import { AuctionBidHistoryEntity } from '../entities/auction.bid.history.entity';
+import { AuctionHistoryEntityRepositoryToken } from '../providers/auction.history.repository.provider';
 
 @Injectable()
 export class AuctionHistoryService {
   constructor(
-    @InjectRepository(AuctionHistoryEntity)
+    @Inject(AuctionHistoryEntityRepositoryToken)
     private auctionHistoryRepository: Repository<AuctionHistoryEntity>,
-    @InjectRepository(AuctionBidHistoryEntity)
+    @Inject(AuctionHistoryEntityRepositoryToken)
     private auctionBidsHistoryRepository: Repository<AuctionBidHistoryEntity>,
   ) {}
 
@@ -20,8 +20,8 @@ export class AuctionHistoryService {
     const allHistory = [...auctionHistory, ...bidsHistory].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
     const humanReadableAuctionHistory = allHistory.map((history) => {
-      let actionText;
-      let entityText;
+      let actionText: string;
+      let entityText: string;
 
       if (history instanceof AuctionHistoryEntity) {
         entityText = `Auction with the id "${history.auctionId}"`;

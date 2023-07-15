@@ -10,9 +10,10 @@ import { RabbitMQHealthService } from './services/rabbitmq.health.service';
 import { LoggerModule } from '../logger/logger.module';
 import { RabbitmqService } from './services/rabbitmq.service';
 import { StartAuctionService } from './services/start.auction.service';
-import { AuctionModule } from '../auctions/auction.module';
 import { AuctionEntityRepositoryProvider } from '../auctions/providers/auction.repository.provider';
 import { AuctionBidEntityRepositoryProvider } from '../auctions/providers/auction.bid.repository.provider';
+import { AuctionBidHistoryEntityRepositoryProvider } from './providers/auction.bid.history.repository.provider';
+import { AuctionHistoryEntityRepositoryProvider } from './providers/auction.history.repository.provider';
 
 @Module({
   imports: [
@@ -28,9 +29,12 @@ import { AuctionBidEntityRepositoryProvider } from '../auctions/providers/auctio
     AuctionHistoryService,
     RabbitMQHealthService,
     RabbitmqService,
+    StartAuctionService,
+    AuctionHistoryService,
     AuctionEntityRepositoryProvider,
     AuctionBidEntityRepositoryProvider,
-    StartAuctionService, 
+    AuctionBidHistoryEntityRepositoryProvider,
+    AuctionHistoryEntityRepositoryProvider,
   ],
 })
 export class AuctionHistoryModule {}
