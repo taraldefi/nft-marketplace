@@ -1,8 +1,7 @@
 import { Injectable, OnModuleInit, OnApplicationShutdown } from '@nestjs/common';
 import * as amqp from 'amqplib';
 import * as winston from 'winston';
-import * as promClient from 'prom-client';
-import * as retry from 'retry';
+import { Counter, Registry } from 'prom-client';
 
 @Injectable()
 export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
@@ -11,18 +10,16 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
   private channel: amqp.Channel | null = null;
   private consuming = false;
 
-  private retryOptions: retry.OperationOptions = {
-    retries: 5, // Number of retries
-    factor: 2, // Exponential backoff factor
-    minTimeout: 1000, // Minimum timeout in milliseconds
-    maxTimeout: 60000, // Maximum timeout in milliseconds
-    randomize: true, // Randomize the timeouts slightly
-  };
-  private retryOperation: retry.RetryOperation;
-
-  private messageCounter = new promClient.Counter({
-    name: 'rabbitmq_messages_received',
-    help: 'Total number of messages received from RabbitMQ',
+  private registry = new Registry();
+  private successfulConnectionCounter = new Counter({
+    name: 'rabbitmq_successful_connections_total',
+    help: 'Total number of successful connections to RabbitMQ',
+    registers: [this.registry],
+  });
+  private connectionErrorCounter = new Counter({
+    name: 'rabbitmq_connection_errors_total',
+    help: 'Total number of connection errors to RabbitMQ',
+    registers: [this.registry],
   });
 
   private logger = winston.createLogger({
@@ -34,13 +31,8 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
     ],
   });
 
-  constructor() {
-    promClient.collectDefaultMetrics();
-  }
-
   async onModuleInit() {
-    this.retryOperation = retry.operation(this.retryOptions);
-    await this.connect();
+    await this.retryConnect();
     await this.startListening();
   }
 
@@ -55,16 +47,16 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
       this.connection.on('error', (err) => {
         this.logger.error(`Connection error: ${err}`);
         this.connection = null;
-        this.retryConnect();
+        this.connectionErrorCounter.inc();
       });
       this.connection.on('close', () => {
         this.logger.info(`Connection closed`);
         this.connection = null;
-        this.retryConnect();
       });
+      this.successfulConnectionCounter.inc();
     } catch (err) {
       this.logger.error(`Failed to connect: ${err}`);
-      this.retryConnect();
+      this.connectionErrorCounter.inc();
     }
   }
 
@@ -90,20 +82,27 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
   }
 
   private async retryConnect() {
-    this.retryOperation.retry((retryCb: (error: Error | null, result?: any) => void) => {
+    let retries = 0;
+
+    while (!this.connection && retries < 5) {
+      try {
+        this.logger.info(`Attempting to connect (Attempt ${retries + 1})...`);
+        await this.connect();
+      } catch (err) {
+        this.logger.error(`Failed to connect: ${err}`);
+      }
+
       if (!this.connection) {
-        this.logger.info(`Attempting to reconnect...`);
-        this.connect()
-          .then(() => retryCb(null, true))
-          .catch((err) => retryCb(err, false));
-      } else {
-        retryCb(null, false);
+        const timeout = Math.pow(2, retries) * 1000;
+        await new Promise((resolve) => setTimeout(resolve, timeout));
       }
-    }, (err: Error | null) => {
-      if (err) {
-        this.logger.error(`Failed to connect after retries: ${err}`);
-      }
-    });
+
+      retries++;
+    }
+
+    if (!this.connection) {
+      this.logger.error(`Failed to connect after retries`);
+    }
   }
 
   async startListening() {
@@ -117,7 +116,6 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
       this.channel.consume(this.queueName, (msg) => {
         if (msg) {
           this.logger.info(`Received message: ${msg.content.toString()}`);
-          this.messageCounter.inc();
           this.channel?.ack(msg);
         }
       });
@@ -143,6 +141,6 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
   }
 
   getMetrics() {
-    return promClient.register.metrics();
+    return this.registry.metrics();
   }
 }
