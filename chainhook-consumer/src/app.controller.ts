@@ -46,6 +46,8 @@ export class AppController {
       console.log('---------------------------------------');
       
       await this.auctionPublishingService.publishMessage('auction_event', JSON.stringify(printPayload));
+
+      console.log('Published message');
     }
   }
 }

@@ -4,7 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ClientsModule } from '@nestjs/microservices';
-import { RabbitMQService, rabbitMQServiceOptions } from './rabbtmq/constants';
+import { rabbitMQServiceOptions } from './rabbtmq/constants';
 import { AuctionPublisherService } from './rabbtmq/auction.service';
 
 @Module({

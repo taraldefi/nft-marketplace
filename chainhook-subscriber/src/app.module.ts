@@ -8,9 +8,14 @@ import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import { AuctionModule } from './modules/auctions/auction.module';
 import { AuctionHistoryModule } from './modules/auctionhistory/auction.history.module';
+import { ClientsModule } from '@nestjs/microservices';
+import { rabbitMQServiceOptions } from './common/rabbitmq/constants';
 
 @Module({
   imports: [
+    ClientsModule.register([
+      rabbitMQServiceOptions as any
+    ]),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [

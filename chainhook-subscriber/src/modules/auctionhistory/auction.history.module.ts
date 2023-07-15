@@ -6,6 +6,7 @@ import { AuctionBidHistoryEntity } from './entities/auction.bid.history.entity';
 import { AuctionHistoryController } from './controllers/auction.history.controller';
 import { AuctionHistoryService } from './services/auction.history.service';
 import { AuctionSubscriberController } from './controllers/auction.subscriber.controller';
+import { RabbitMQHealthService } from './services/rabbitmq.health.service';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { AuctionSubscriberController } from './controllers/auction.subscriber.co
   providers: [
     ConfigModule,
     ConfigService,
-    AuctionHistoryService
+    AuctionHistoryService,
+    RabbitMQHealthService,
   ],
 })
 export class AuctionHistoryModule {}

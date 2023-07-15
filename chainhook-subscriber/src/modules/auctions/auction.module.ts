@@ -13,7 +13,7 @@ import { AuctionBidEntity } from './entities/auction.bid.entity';
   controllers: [],
   providers: [
     ConfigModule,
-    ConfigService
+    ConfigService,
   ],
 })
 export class AuctionModule {}
