@@ -118,9 +118,7 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
 
                     const content = msg.content.toString();
                     const json = JSON.parse(content);
-                    const { pattern, data } = json;
-                    // this.logger.info(`Received message: ${pattern} ${data}`);
-
+                    const { data } = json;
                     const dataJson = JSON.parse(data);
 
                     let type = dataJson.action.value as string;
