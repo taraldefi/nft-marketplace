@@ -10,7 +10,7 @@ export class RabbitMQHealthService {
 
   public async checkClientStatus() {
     try{
-      const response = await axios.get('http://localhost:15672/api/aliveness-test/%2F', {
+      const response = await axios.get('http://localhost:15673/api/aliveness-test/%2F', {
         auth: {
           username: 'admin',
           password: 'supersecretpassword'
