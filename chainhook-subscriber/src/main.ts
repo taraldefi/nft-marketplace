@@ -37,4 +37,4 @@ async function bootstrap() {
   console.log(`Application listening in port: ${port}`);
 }
 bootstrap();
-start()
+// start()
