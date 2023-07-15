@@ -4,7 +4,6 @@ import { Event } from './chainhook/Event';
 import { cvToValue, deserializeCV } from "@stacks/transactions";
 import { AuctionPublisherService } from './rabbtmq/auction.service';
 
-
 // @UseGuards(ApiKeyAuthGuard)
 @Controller()
 export class AppController {

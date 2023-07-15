@@ -5,8 +5,7 @@ import { RabbitMQService } from './constants';
 @Injectable()
 export class AuctionPublisherService {
     constructor(
-        @Inject(RabbitMQService)
-        private client: ClientProxy,
+        @Inject(RabbitMQService) private client: ClientProxy,
     ) {
         
     }
