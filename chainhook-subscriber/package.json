@@ -52,12 +52,14 @@
     "cookie-parser": "^1.4.6",
     "nest-winston": "^1.9.3",
     "pg": "8.7.3",
+    "prom-client": "^14.2.0",
     "reflect-metadata": "^0.1.13",
+    "retry": "^0.13.1",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "typeorm": "0.2.43",
     "typeorm-seeding": "^1.6.1",
-    "winston": "^3.9.0",
+    "winston": "^3.10.0",
     "winston-cloudwatch": "^3.2.0"
   },
   "devDependencies": {
