@@ -6,7 +6,7 @@ export const rabbitMQServiceOptions = {
     name: RabbitMQService,
     transport: Transport.RMQ,
     options: {
-        urls: ['amqp://admin:supersecretpassword@localhost:5672'],
+        urls: ['amqp://admin:supersecretpassword@localhost:5673'],
         queue: 'chainhook_queue',
         queues: [
             {
