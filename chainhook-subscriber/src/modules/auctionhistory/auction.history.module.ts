@@ -11,14 +11,15 @@ import { LoggerModule } from '../logger/logger.module';
 import { RabbitmqService } from './services/rabbitmq.service';
 import { StartAuctionService } from './services/start.auction.service';
 import { AuctionModule } from '../auctions/auction.module';
+import { AuctionEntityRepositoryProvider } from '../auctions/providers/auction.repository.provider';
+import { AuctionBidEntityRepositoryProvider } from '../auctions/providers/auction.bid.repository.provider';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
         AuctionHistoryEntity, AuctionBidHistoryEntity
     ]),
-    LoggerModule,
-    AuctionModule
+    LoggerModule
   ],
   controllers: [AuctionHistoryController, AuctionSubscriberController],
   providers: [
@@ -27,7 +28,9 @@ import { AuctionModule } from '../auctions/auction.module';
     AuctionHistoryService,
     RabbitMQHealthService,
     RabbitmqService,
-    StartAuctionService
+    AuctionEntityRepositoryProvider,
+    AuctionBidEntityRepositoryProvider,
+    StartAuctionService, 
   ],
 })
 export class AuctionHistoryModule {}

@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuctionEntity } from './entities/auction.entity';
 import { AuctionBidEntity } from './entities/auction.bid.entity';
+import { AuctionEntityRepositoryProvider } from './providers/auction.repository.provider';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AuctionBidEntity } from './entities/auction.bid.entity';
   providers: [
     ConfigModule,
     ConfigService,
+    AuctionEntityRepositoryProvider
   ],
 })
 export class AuctionModule {}
