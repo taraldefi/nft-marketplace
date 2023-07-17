@@ -1,7 +1,7 @@
 import { Action } from "./action.model";
 import { Highestbidder } from "./highest-bidder.model";
 
-export interface CancelBid {
+export interface CancelAuction {
     action: Action;
     'auction-id': Action;
     'end-block': Action;

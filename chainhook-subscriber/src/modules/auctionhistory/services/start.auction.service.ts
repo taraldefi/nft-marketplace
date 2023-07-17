@@ -5,6 +5,7 @@ import { AuctionEntityRepositoryToken } from "src/modules/auctions/providers/auc
 import { Transactional } from "src/common/transaction/transaction";
 import { runOnTransactionComplete, runOnTransactionRollback } from "src/common/transaction/hook";
 import { AuctionEntity } from "src/modules/auctions/entities/auction.entity";
+import { AuctionStatus } from "src/modules/auctions/entities/auction.status";
 
 @Injectable()
 export class StartAuctionService {
@@ -25,7 +26,7 @@ export class StartAuctionService {
     const auction = new AuctionEntity();
 
     auction.auctionId = Number(startAuctionModel["auction-id"].value);
-    auction.status = startAuctionModel["auction-status"].value;
+    auction.status = AuctionStatus.OPEN;
     auction.endBlock = startAuctionModel["end-block"].value;
     auction.highestBid = startAuctionModel["highest-bid"].value;
     auction.highestBidder = startAuctionModel["highest-bidder"].value.value; 
