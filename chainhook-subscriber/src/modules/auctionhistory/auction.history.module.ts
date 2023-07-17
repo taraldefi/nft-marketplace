@@ -31,6 +31,7 @@ import { AuctionHistoryEntityRepositoryProvider } from './providers/auction.hist
     RabbitmqService,
     StartAuctionService,
     AuctionHistoryService,
+    
     AuctionEntityRepositoryProvider,
     AuctionBidEntityRepositoryProvider,
     AuctionBidHistoryEntityRepositoryProvider,
