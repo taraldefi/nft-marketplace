@@ -1,10 +1,9 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { CancelAuction, StartAuction } from "src/models";
+import { CancelAuction } from "src/models/cancel-auction.model";
 import { AuctionEntityRepository } from "src/modules/auctions/repositories/auction.repository";
 import { AuctionEntityRepositoryToken } from "src/modules/auctions/providers/auction.repository.provider";
 import { Transactional } from "src/common/transaction/transaction";
 import { runOnTransactionComplete, runOnTransactionRollback } from "src/common/transaction/hook";
-import { AuctionEntity } from "src/modules/auctions/entities/auction.entity";
 import { AuctionStatus } from "src/modules/auctions/entities/auction.status";
 
 @Injectable()
