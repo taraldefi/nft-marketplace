@@ -20,6 +20,9 @@ export class PlaceBidService {
   @Transactional()
   public async placeBid(placeBidModel: PlaceBid): Promise<void> {
 
+    console.log('PLACE BID::::: ');
+    console.log(JSON.stringify(placeBidModel, null, 2));
+
     runOnTransactionRollback((cb) =>
       console.log('Rollback error ' + cb.message),
     );
@@ -34,6 +37,7 @@ export class PlaceBidService {
     const bid = new AuctionBidEntity();
     bid.amount = Number(placeBidModel.bid.value);
     bid.bidder = placeBidModel.bidder.value;
+    bid.auction = auction;
 
     await this.auctionBidRepository.save(bid);
 

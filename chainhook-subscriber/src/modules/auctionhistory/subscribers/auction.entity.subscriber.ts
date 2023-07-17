@@ -2,8 +2,10 @@ import { AuctionEntity } from "src/modules/auctions/entities/auction.entity";
 import { Connection, EventSubscriber } from "typeorm";
 import { AuctionHistoryEntity } from "../entities/auction.history.entity";
 import { BaseHistorySubscriber } from "src/modules/history/subscribers/base.subscriber";
+import { Injectable } from "@nestjs/common";
 
 @EventSubscriber()
+@Injectable()
 export class AuctionEntitySubscriber extends BaseHistorySubscriber<AuctionEntity, AuctionHistoryEntity> {
   constructor(connection: Connection) {
     super(connection, AuctionEntity, AuctionHistoryEntity);

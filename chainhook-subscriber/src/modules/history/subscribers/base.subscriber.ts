@@ -43,7 +43,7 @@ import {
       history.changes = updatedColumns.map(column => ({ name: column.propertyName, new_value: entity[column.propertyName] }));
 
       this.copyEntityToHistory(entity, history);
-      await this.connection.manager.save(history);
+      await event.manager.save(history);
     }
 
     protected getEntityChanges(event: UpdateEvent<T>): Array<{ name: string, new_value: any }> {

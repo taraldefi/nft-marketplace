@@ -5,10 +5,6 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { useContainer } from 'class-validator';
 import validationOptions from './common/validation/validation.options';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import cookieParser from 'cookie-parser';
-import fs from 'fs';
-import { start } from './simple-listener';
 
 async function bootstrap() {
   require('tsconfig-paths/register');
