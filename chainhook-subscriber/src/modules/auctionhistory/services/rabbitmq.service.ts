@@ -128,12 +128,21 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
             this.channel.consume(this.queueName, async (msg) => {
                 if (msg) {
 
+                    console.log('Consuming message');
+
                     const content = msg.content.toString();
                     const json = JSON.parse(content);
                     const { data } = json;
                     const dataJson = JSON.parse(data);
 
                     let type = dataJson.action.value as string;
+
+                    //
+                    // A few things have been changed for this implementation: 
+                    // * The action id is not unique intentionally so we can run the integration tests multiple times.
+                    //   In production, you should make sure the action id is unique.
+                    // * Not all messages are, obcvously, implemented but the ones that are, serve as examples.
+                    //
 
                     switch (type) {
                         case 'place-bid':
