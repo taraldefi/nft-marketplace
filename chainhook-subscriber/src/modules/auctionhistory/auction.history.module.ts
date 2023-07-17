@@ -15,6 +15,7 @@ import { AuctionBidEntityRepositoryProvider } from '../auctions/providers/auctio
 import { AuctionBidHistoryEntityRepositoryProvider } from './providers/auction.bid.history.repository.provider';
 import { AuctionHistoryEntityRepositoryProvider } from './providers/auction.history.repository.provider';
 import { CancelAuctionService } from './services/cancel.auction.service';
+import { PlaceBidService } from './services/place.bid.service';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { CancelAuctionService } from './services/cancel.auction.service';
     StartAuctionService,
     CancelAuctionService,
     AuctionHistoryService,
+    PlaceBidService,
 
     AuctionEntityRepositoryProvider,
     AuctionBidEntityRepositoryProvider,
