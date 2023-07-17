@@ -15,6 +15,7 @@ export class AuctionEntitySubscriber extends BaseHistorySubscriber<AuctionEntity
     history.createdAt = new Date();
 
     history.highestBid = entity.highestBid;
+    history.maker = entity.maker;
 
     history.highestBidder = entity.highestBidder;
     history.nftAsset = entity.nftAsset;

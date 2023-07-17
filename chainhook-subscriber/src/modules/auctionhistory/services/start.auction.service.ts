@@ -35,6 +35,8 @@ export class StartAuctionService {
 
     var highestBidder = startAuctionModel["highest-bidder"].value;
 
+    auction.maker = startAuctionModel.maker.value;
+
     if (highestBidder != null) {
         var highestBidderValue = highestBidder.value;
 
