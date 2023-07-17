@@ -14,6 +14,7 @@ import { AuctionEntityRepositoryProvider } from '../auctions/providers/auction.r
 import { AuctionBidEntityRepositoryProvider } from '../auctions/providers/auction.bid.repository.provider';
 import { AuctionBidHistoryEntityRepositoryProvider } from './providers/auction.bid.history.repository.provider';
 import { AuctionHistoryEntityRepositoryProvider } from './providers/auction.history.repository.provider';
+import { CancelAuctionService } from './services/cancel.auction.service';
 
 @Module({
   imports: [
@@ -30,8 +31,9 @@ import { AuctionHistoryEntityRepositoryProvider } from './providers/auction.hist
     RabbitMQHealthService,
     RabbitmqService,
     StartAuctionService,
+    CancelAuctionService,
     AuctionHistoryService,
-    
+
     AuctionEntityRepositoryProvider,
     AuctionBidEntityRepositoryProvider,
     AuctionBidHistoryEntityRepositoryProvider,
