@@ -17,6 +17,9 @@ export class StartAuctionService {
   @Transactional()
   public async startAuction(startAuctionModel: StartAuction): Promise<void> {
 
+    console.log('Start Auction Service');
+    console.log(JSON.stringify(startAuctionModel, null, 2));
+
     runOnTransactionRollback((cb) =>
       console.log('Rollback error ' + cb.message),
     );
@@ -29,7 +32,18 @@ export class StartAuctionService {
     auction.status = AuctionStatus.OPEN;
     auction.endBlock = startAuctionModel["end-block"].value;
     auction.highestBid = startAuctionModel["highest-bid"].value;
-    auction.highestBidder = startAuctionModel["highest-bidder"].value.value; 
+
+    var highestBidder = startAuctionModel["highest-bidder"].value;
+
+    if (highestBidder != null) {
+        var highestBidderValue = highestBidder.value;
+
+        if (highestBidderValue != null) {
+
+            auction.highestBidder = highestBidderValue;
+        }
+    }
+
     auction.nftAsset = startAuctionModel["nft-asset-contract"].value;
 
     await this.auctionRepository.save(auction);
