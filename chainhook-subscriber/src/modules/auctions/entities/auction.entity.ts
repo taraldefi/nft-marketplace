@@ -18,15 +18,23 @@ export class AuctionEntity extends CustomBaseEntity {
   @Allow()
   endBlock: string;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   @Allow()
   highestBid: string;
 
   @Column()
   @Allow()
-  nftAsset: string;
+  maker: string;
 
   @Column()
+  @Allow()
+  nftAsset: string;
+
+  @Column({
+    nullable: true,
+  })
   @Allow()
   highestBidder: string;
 
