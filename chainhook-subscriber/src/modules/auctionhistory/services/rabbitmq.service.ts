@@ -2,6 +2,10 @@ import { Injectable, OnModuleInit, OnApplicationShutdown } from '@nestjs/common'
 import * as amqp from 'amqplib';
 import * as winston from 'winston';
 import { Counter, Registry } from 'prom-client';
+import { StartAuctionService } from './start.auction.service';
+import { CancelAuctionService } from './cancel.auction.service';
+import { PlaceBidService } from './place.bid.service';
+import { CancelAuction, PlaceBid, StartAuction } from 'src/models';
 
 @Injectable()
 export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
@@ -30,6 +34,14 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
             new winston.transports.File({ filename: 'error.log', level: 'error' }),
         ],
     });
+
+    public constructor(
+        private readonly startAuctionService: StartAuctionService,
+        private readonly cancelAuctionService: CancelAuctionService,
+        private readonly placeBidService: PlaceBidService,
+    ) {
+
+    }
 
     async onModuleInit() {
         await this.retryConnect();
@@ -113,7 +125,7 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
         if (this.channel) {
             await this.channel.assertQueue(this.queueName, { durable: false });
 
-            this.channel.consume(this.queueName, (msg) => {
+            this.channel.consume(this.queueName, async (msg) => {
                 if (msg) {
 
                     const content = msg.content.toString();
@@ -126,18 +138,25 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
                     switch (type) {
                         case 'place-bid':
                             this.logger.info('Place bid event received');
+                            const placeBidModel = dataJson as PlaceBid;
+                            await this.placeBidService.placeBid(placeBidModel);
                             break;
                         case 'place-bid-return-previous-bid':
                             this.logger.info('Place bid return previous bid event received');
                             break;
                         case 'start-auction':
                             this.logger.info('Start Auction event received');
+
+                            const startAuctionModel = dataJson as StartAuction;
+                            await this.startAuctionService.startAuction(startAuctionModel);
                             break;
                         case 'set-whitelisted':
                             this.logger.info('Whitelist event received');
                             break;
                         case 'cancel-auction': 
                             this.logger.info('Cancel Auction event received');
+                            const cancelAuctionModel = dataJson as CancelAuction;
+                            await this.cancelAuctionService.cancelAuction(cancelAuctionModel);
                             break;
                         default:
                             this.logger.info('Unknown event received');
