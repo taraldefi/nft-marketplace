@@ -15,8 +15,6 @@ export class AuctionEntitySubscriber extends BaseHistorySubscriber<AuctionEntity
 
   @Transactional()
   protected copyEntityToHistory(entity: AuctionEntity, history: AuctionHistoryEntity): void {
-    
-    
     runOnTransactionRollback((cb) =>
       console.log('Rollback error on auction bid history transaction' + cb.message),
     );
@@ -24,10 +22,6 @@ export class AuctionEntitySubscriber extends BaseHistorySubscriber<AuctionEntity
     runOnTransactionComplete((cb) => console.log('Transaction Complete for inserting auction bid history'));
     
     
-    console.log('Auction:::: ');
-    console.log(JSON.stringify(entity, null, 2));
-
-
     history.auctionId = entity.auctionId;
     history.endBlock = entity.endBlock;
     history.createdAt = new Date();
