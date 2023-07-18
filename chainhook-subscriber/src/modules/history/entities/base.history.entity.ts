@@ -3,6 +3,8 @@ import {
     Column,
     PrimaryGeneratedColumn,
     Check,
+    BeforeInsert,
+    BeforeUpdate,
   } from 'typeorm';
   
   export abstract class BaseHistory {
@@ -13,9 +15,22 @@ import {
     @Check(`"action" IN ('insert', 'update', 'delete')`)
     action: 'insert' | 'update' | 'delete';
   
-    @CreateDateColumn()
+    @Column({ type: 'timestamp', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
     createdAt: Date;
+
+    @Column({ type: 'timestamp', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
+    updatedAt: Date;
 
     @Column('json', { default: {} })
     changes: any;
+
+    @BeforeInsert()
+    createTimestamp() {
+      this.createdAt = new Date();
+    }
+
+    @BeforeUpdate()
+    updateTimestamp() {
+      this.updatedAt = new Date();
+    }
   }
