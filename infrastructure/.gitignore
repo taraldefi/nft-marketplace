@@ -396,9 +396,20 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-**/settings/Mainnet.toml
-**/settings/Testnet.toml
-.cache/**
-history.txt
 
-.chainhook-subscriber/node_modules/*
+rabbitmq1/*
+
+rabbitmq2/*
+
+!rabbitmq1/.gitkeep
+!rabbitmq2/.gitkeep
+
+server.cert
+server.key
+
+grafana/certs/server.crt
+grafana/certs/server.key
+grafana/certs/server.csr
+
+.env
+.data/*
