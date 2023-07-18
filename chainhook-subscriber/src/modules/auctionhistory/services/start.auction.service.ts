@@ -28,7 +28,6 @@ export class StartAuctionService {
 
     const existingAuction = await this.auctionRepository.findOne({
         where: { auctionId: Number(startAuctionModel["auction-id"].value)},
-        relations: ['bids'],
     });
 
     if (existingAuction != null) {

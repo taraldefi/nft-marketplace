@@ -3,6 +3,7 @@ import { CustomBaseEntity } from 'src/common/entity/custom-base.entity';
 import {
   Column,
   Entity,
+  JoinTable,
   OneToMany,
 } from 'typeorm';
 import { AuctionStatus } from './auction.status';
