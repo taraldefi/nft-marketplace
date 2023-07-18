@@ -43,6 +43,9 @@ export class PlaceBidService {
 
     (auction.bids || []).push(bid);
 
+    auction.highestBidder = bid.bidder;
+    auction.highestBid = String(bid.amount);
+
     await this.auctionRepository.save(auction);
   }
 }

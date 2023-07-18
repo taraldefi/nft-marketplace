@@ -3,22 +3,20 @@ import { Repository } from 'typeorm';
 import { AuctionHistoryEntity } from '../entities/auction.history.entity';
 import { AuctionBidHistoryEntity } from '../entities/auction.bid.history.entity';
 import { AuctionHistoryEntityRepositoryToken } from '../providers/auction.history.repository.provider';
+import { AuctionBidHistoryEntityRepositoryToken } from '../providers/auction.bid.history.repository.provider';
 
 @Injectable()
 export class AuctionHistoryService {
   constructor(
     @Inject(AuctionHistoryEntityRepositoryToken)
     private auctionHistoryRepository: Repository<AuctionHistoryEntity>,
-    @Inject(AuctionHistoryEntityRepositoryToken)
-    private auctionBidsHistoryRepository: Repository<AuctionBidHistoryEntity>,
+    @Inject(AuctionBidHistoryEntityRepositoryToken)
+    private auctionBidsHistoryRepository: Repository<AuctionBidHistoryEntity>
   ) {}
 
   async getHumanReadableAuctionHistory(auctionId: number): Promise<string> {
     const auctionHistory = await this.auctionHistoryRepository.find({ where: { auctionId: auctionId }, order: { createdAt: 'ASC' } });
     const bidsHistory = await this.auctionBidsHistoryRepository.find({ where: { auctionId: auctionId }, order: { createdAt: 'ASC' } });
-
-    console.log(JSON.stringify(auctionHistory, null, 2));
-    console.log(JSON.stringify(bidsHistory, null, 2) + '\n\n');
 
     const allHistory = [...auctionHistory, ...bidsHistory].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
