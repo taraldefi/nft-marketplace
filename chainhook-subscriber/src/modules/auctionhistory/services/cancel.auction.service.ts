@@ -5,22 +5,24 @@ import { AuctionEntityRepositoryToken } from "src/modules/auctions/providers/auc
 import { Transactional } from "src/common/transaction/transaction";
 import { runOnTransactionComplete, runOnTransactionRollback } from "src/common/transaction/hook";
 import { AuctionStatus } from "src/modules/auctions/entities/auction.status";
+import { IsolationLevel } from "src/common/transaction/IsolationLevel";
+import { BaseService } from "./base.service";
 
 @Injectable()
-export class CancelAuctionService {
+export class CancelAuctionService extends BaseService {
   constructor(
     @Inject(AuctionEntityRepositoryToken)
     private auctionRepository: AuctionEntityRepository
-  ) {}
+  ) {
+    super();
+  }
 
-  @Transactional()
+  @Transactional({
+    isolationLevel: IsolationLevel.READ_COMMITTED,
+  })
   public async cancelAuction(cancelAuctionModel: CancelAuction): Promise<void> {
 
-    runOnTransactionRollback((cb) =>
-      console.log('Rollback error ' + cb.message),
-    );
-
-    runOnTransactionComplete((_) => console.log('Transaction Complete'));
+    this.setupTransactionHooks();
     
     const auction = await this.auctionRepository.findOneOrFail({
         where: { auctionId: Number(cancelAuctionModel["auction-id"].value)},

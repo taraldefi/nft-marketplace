@@ -124,8 +124,7 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
 
         if (this.channel) {
             await this.channel.assertQueue(this.queueName, { durable: false });
-
-            this.channel.consume(this.queueName, async (msg) => {
+            this.channel.consume(this.queueName, async (msg: amqp.ConsumeMessage | null) => {
                 if (msg) {
 
                     console.log('Consuming message');
