@@ -25,6 +25,16 @@ export class StartAuctionService {
     );
 
     runOnTransactionComplete((_) => console.log('Transaction Complete'));
+
+    const existingAuction = await this.auctionRepository.findOne({
+        where: { auctionId: Number(startAuctionModel["auction-id"].value)},
+        relations: ['bids'],
+    });
+
+    if (existingAuction != null) {
+        return;
+    }
+
     
     const auction = new AuctionEntity();
 

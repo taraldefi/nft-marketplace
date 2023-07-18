@@ -17,6 +17,9 @@ export class AuctionHistoryService {
     const auctionHistory = await this.auctionHistoryRepository.find({ where: { auctionId: auctionId }, order: { createdAt: 'ASC' } });
     const bidsHistory = await this.auctionBidsHistoryRepository.find({ where: { auctionId: auctionId }, order: { createdAt: 'ASC' } });
 
+    console.log(JSON.stringify(auctionHistory, null, 2));
+    console.log(JSON.stringify(bidsHistory, null, 2) + '\n\n');
+
     const allHistory = [...auctionHistory, ...bidsHistory].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
     const humanReadableAuctionHistory = allHistory.map((history) => {
