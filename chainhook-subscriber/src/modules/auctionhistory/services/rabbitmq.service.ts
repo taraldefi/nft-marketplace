@@ -7,6 +7,31 @@ import { CancelAuctionService } from './cancel.auction.service';
 import { PlaceBidService } from './place.bid.service';
 import { CancelAuction, PlaceBid, StartAuction } from 'src/models';
 
+class CancellablePromise<T> {
+    private _promise: Promise<T>;
+    private _reject: (reason?: any) => void;
+  
+    constructor(promise: Promise<T>) {
+      let reject: (reason?: any) => void;
+  
+      this._promise = new Promise<T>((resolve, rejectOriginal) => {
+        reject = rejectOriginal;
+  
+        promise.then(resolve, rejectOriginal);
+      });
+  
+      this._reject = reject!;
+    }
+  
+    get promise(): Promise<T> {
+      return this._promise;
+    }
+  
+    cancel(): void {
+      this._reject({ cancelled: true });
+    }
+  }
+
 @Injectable()
 export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
     private queueName = 'chainhook_queue';
@@ -36,6 +61,8 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
         ],
     });
 
+    private activePromises: CancellablePromise<void>[] = [];
+
     public constructor(
         private readonly startAuctionService: StartAuctionService,
         private readonly cancelAuctionService: CancelAuctionService,
@@ -51,9 +78,34 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
 
     async onApplicationShutdown() {
         this.shuttingDown = true;
+
+        // Cancel all active promises
+        this.activePromises.forEach(p => p.cancel());
         await this.stopListening();
         await this.closeConnection();
     }
+
+    private addPromise(promise: Promise<void>): CancellablePromise<void> {
+        const cancellablePromise = new CancellablePromise<void>(promise);
+    
+        this.activePromises.push(cancellablePromise);
+    
+        // When the promise completes, remove it from the active promises
+        cancellablePromise.promise.then(
+          () => this.removePromise(cancellablePromise),
+          () => this.removePromise(cancellablePromise)
+        );
+    
+        return cancellablePromise;
+      }
+    
+      private removePromise(promise: CancellablePromise<void>): void {
+        const index = this.activePromises.indexOf(promise);
+    
+        if (index !== -1) {
+          this.activePromises.splice(index, 1);
+        }
+      }
 
     private async connect() {
         try {
@@ -188,10 +240,19 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
         
               const consumeNextMessage = async () => {
                 if (this.consuming && !this.shuttingDown) {
-                  const msg = await getChannelMessage(this.queueName, { noAck: false });
-        
-                  await processMessage(msg);
-                  await consumeNextMessage();
+                  const promise = getChannelMessage(this.queueName, { noAck: false })
+                  .then(processMessage)
+                  .catch((err) => {
+                    this.logger.error(`Error in consumeNextMessage: ${err}`);
+                    // other error handling logic here
+                  });
+
+                  this.addPromise(promise).promise
+                  .then(consumeNextMessage)
+                  .catch((err) => {
+                    this.logger.error(`Error in consumeNextMessage: ${err}`);
+                    // other error handling logic here
+                  });
                 }
               };
         
