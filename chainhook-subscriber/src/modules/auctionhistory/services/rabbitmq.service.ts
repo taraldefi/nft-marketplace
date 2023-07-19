@@ -7,14 +7,13 @@ import { CancelAuctionService } from './cancel.auction.service';
 import { PlaceBidService } from './place.bid.service';
 import { CancelAuction, PlaceBid, StartAuction } from 'src/models';
 
-import { promisify } from 'util';
-
 @Injectable()
 export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
     private queueName = 'chainhook_queue';
     private connection: amqp.Connection | null = null;
     private channel: amqp.Channel | null = null;
     private consuming = false;
+    private shuttingDown = false;
 
     private registry = new Registry();
     private successfulConnectionCounter = new Counter({
@@ -51,6 +50,7 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
     }
 
     async onApplicationShutdown() {
+        this.shuttingDown = true;
         await this.stopListening();
         await this.closeConnection();
     }
@@ -187,7 +187,7 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
               };
         
               const consumeNextMessage = async () => {
-                if (this.consuming) {
+                if (this.consuming && !this.shuttingDown) {
                   const msg = await getChannelMessage(this.queueName, { noAck: false });
         
                   await processMessage(msg);
@@ -199,6 +199,8 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
               this.logger.info(`Started listening to ${this.queueName}`);
         
               await consumeNextMessage();
+
+              this.logger.info(`Stopped listening to ${this.queueName}`);
         }
     }
 
