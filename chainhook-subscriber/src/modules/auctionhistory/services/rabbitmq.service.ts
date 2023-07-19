@@ -7,6 +7,8 @@ import { CancelAuctionService } from './cancel.auction.service';
 import { PlaceBidService } from './place.bid.service';
 import { CancelAuction, PlaceBid, StartAuction } from 'src/models';
 
+import { promisify } from 'util';
+
 @Injectable()
 export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
     private queueName = 'chainhook_queue';
@@ -124,60 +126,129 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
 
         if (this.channel) {
             await this.channel.assertQueue(this.queueName, { durable: false });
-            this.channel.consume(this.queueName, async (msg: amqp.ConsumeMessage | null) => {
-                if (msg) {
 
-                    console.log('Consuming message');
+            const getChannelMessage = (queue: string, options: amqp.Options.Get) => {
+                return new Promise<amqp.ConsumeMessage | null>((resolve, reject) => {
+                  this.channel?.get(queue, options)
+                    .then((message: amqp.GetMessage | false) => {
+                      if (message !== false) {
+                        const consumeMessage: amqp.ConsumeMessage = {
+                          fields: {
+                            consumerTag: '',
+                            deliveryTag: message.fields.deliveryTag, // Extract the delivery tag from the message
+                            redelivered: false,
+                            exchange: '',
+                            routingKey: '',
+                          },
+                          properties: message.properties,
+                          content: message.content,
+                        };
+                        resolve(consumeMessage);
+                      } else {
+                        resolve(null);
+                      }
+                    })
+                    .catch((err) => {
+                        console.log('In get channel message catch', err)
+                      reject(err);
+                    });
+                });
+              };
 
-                    const content = msg.content.toString();
-                    const json = JSON.parse(content);
-                    const { data } = json;
-                    const dataJson = JSON.parse(data);
-
-                    let type = dataJson.action.value as string;
-
-                    //
-                    // A few things have been changed for this implementation: 
-                    // * The action id is not unique intentionally so we can run the integration tests multiple times.
-                    //   In production, you should make sure the action id is unique.
-                    // * Not all messages are, obcvously, implemented but the ones that are, serve as examples.
-                    //
-
-                    switch (type) {
-                        case 'place-bid':
-                            this.logger.info('Place bid event received');
-                            const placeBidModel = dataJson as PlaceBid;
-                            await this.placeBidService.placeBid(placeBidModel);
-                            break;
-                        case 'place-bid-return-previous-bid':
-                            this.logger.info('Place bid return previous bid event received');
-                            break;
-                        case 'start-auction':
-                            this.logger.info('Start Auction event received');
-
-                            const startAuctionModel = dataJson as StartAuction;
-                            await this.startAuctionService.startAuction(startAuctionModel);
-                            break;
-                        case 'set-whitelisted':
-                            this.logger.info('Whitelist event received');
-                            break;
-                        case 'cancel-auction': 
-                            this.logger.info('Cancel Auction event received');
-                            const cancelAuctionModel = dataJson as CancelAuction;
-                            await this.cancelAuctionService.cancelAuction(cancelAuctionModel);
-                            break;
-                        default:
-                            this.logger.info('Unknown event received');
-                            break;
-                    }
-
-                    this.channel?.ack(msg);
+              const reconnect = async () => {
+                // Close the existing channel
+                if (this.channel) {
+                  await this.channel.close();
+                  this.channel = null;
                 }
-            });
+                
+                // Reconnect to RabbitMQ
+                await this.connect();
+              };
 
-            this.consuming = true;
-            this.logger.info(`Started listening to ${this.queueName}`);
+              const processMessage = async (msg: amqp.ConsumeMessage | null) => {
+                if (msg) {
+                  let success = false;
+                  try {
+                    this.logger.info(`Received message: ${msg.content.toString()}`);
+                    await this.processMessageAsync(msg); // Process the message asynchronously
+                    success = true;
+                  } catch (error) {
+                    this.logger.error(`Error processing message: ${error}`);
+                    await reconnect(); // Re-establish the channel connection
+                  } finally {
+                    if (success) {
+                      this.channel?.ack(msg); // Acknowledge the message if processing is successful
+                    } else {
+                      this.channel?.nack(msg, false, true); // Reject (nack) the message and requeue it
+                    }
+                  }
+                }
+              };
+        
+              const consumeNextMessage = async () => {
+                if (this.consuming) {
+                  const msg = await getChannelMessage(this.queueName, { noAck: false });
+        
+                  await processMessage(msg);
+                  await consumeNextMessage();
+                }
+              };
+        
+              this.consuming = true;
+              this.logger.info(`Started listening to ${this.queueName}`);
+        
+              await consumeNextMessage();
         }
+    }
+
+    async processMessageAsync(msg: amqp.ConsumeMessage) {
+        if (msg) {
+
+            console.log('Consuming message');
+
+            const content = msg.content.toString();
+            const json = JSON.parse(content);
+            const { data } = json;
+            const dataJson = JSON.parse(data);
+
+            let type = dataJson.action.value as string;
+
+            //
+            // A few things have been changed for this implementation: 
+            // * The action id is not unique intentionally so we can run the integration tests multiple times.
+            //   In production, you should make sure the action id is unique.
+            // * Not all messages are, obcvously, implemented but the ones that are, serve as examples.
+            //
+
+            switch (type) {
+                case 'place-bid':
+                    this.logger.info('Place bid event received');
+                    const placeBidModel = dataJson as PlaceBid;
+                    await this.placeBidService.placeBid(placeBidModel);
+                    break;
+                case 'place-bid-return-previous-bid':
+                    this.logger.info('Place bid return previous bid event received');
+                    break;
+                case 'start-auction':
+                    this.logger.info('Start Auction event received');
+
+                    const startAuctionModel = dataJson as StartAuction;
+                    await this.startAuctionService.startAuction(startAuctionModel);
+                    break;
+                case 'set-whitelisted':
+                    this.logger.info('Whitelist event received');
+                    break;
+                case 'cancel-auction': 
+                    this.logger.info('Cancel Auction event received');
+                    const cancelAuctionModel = dataJson as CancelAuction;
+                    await this.cancelAuctionService.cancelAuction(cancelAuctionModel);
+                    break;
+                default:
+                    this.logger.info('Unknown event received');
+                    break;
+            }
+        } 
     }
 
     async stopListening() {
