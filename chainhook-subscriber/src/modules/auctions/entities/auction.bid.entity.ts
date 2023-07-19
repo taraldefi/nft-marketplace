@@ -2,6 +2,8 @@ import { Allow } from "class-validator";
 import { CustomBaseEntity } from "src/common/entity/custom-base.entity";
 import { Column, Entity, ManyToOne } from "typeorm";
 import { AuctionEntity } from "./auction.entity";
+import { Exclude } from 'class-transformer';
+
 
 @Entity({ name: 'Bids' })
 export class AuctionBidEntity extends CustomBaseEntity {
@@ -14,10 +16,11 @@ export class AuctionBidEntity extends CustomBaseEntity {
     @Allow()
     bidder: string;
 
-    @ManyToOne(() => AuctionEntity, {
+    @ManyToOne(() => AuctionEntity, auction => auction.bids, {
         eager: true,
         cascade: true,
         onDelete: 'CASCADE',
     })
+    @Exclude()
     auction: AuctionEntity;
 }
