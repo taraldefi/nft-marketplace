@@ -3,19 +3,25 @@ import { StartAuction } from "src/models";
 import { AuctionEntityRepository } from "src/modules/auctions/repositories/auction.repository";
 import { AuctionEntityRepositoryToken } from "src/modules/auctions/providers/auction.repository.provider";
 import { Transactional } from "src/common/transaction/transaction";
-import { runOnTransactionComplete, runOnTransactionRollback } from "src/common/transaction/hook";
 import { AuctionEntity } from "src/modules/auctions/entities/auction.entity";
 import { AuctionStatus } from "src/modules/auctions/entities/auction.status";
 import { IsolationLevel } from "src/common/transaction/IsolationLevel";
 import { BaseService } from "./base.service";
+import { AuctionHistoryEntity } from "../entities/auction.history.entity";
+import { AuctionHistoryEntityRepositoryToken } from "../providers/auction.history.repository.provider";
+import { AuctionHistoryEntityRepository } from "../repositories/auction.history.repository";
 
 @Injectable()
-export class StartAuctionService extends BaseService {
+export class StartAuctionService extends BaseService<AuctionEntity, AuctionHistoryEntity> {
+  
   constructor(
     @Inject(AuctionEntityRepositoryToken)
-    private auctionRepository: AuctionEntityRepository
+    private auctionRepository: AuctionEntityRepository,
+
+    @Inject(AuctionHistoryEntityRepositoryToken)
+    private auctionHistoryRepository: AuctionHistoryEntityRepository,
   ) {
-    super();
+    super(AuctionEntity, AuctionHistoryEntity, auctionHistoryRepository);
   }
 
   @Transactional({
@@ -24,10 +30,7 @@ export class StartAuctionService extends BaseService {
   public async startAuction(startAuctionModel: StartAuction): Promise<void> {
 
     this.setupTransactionHooks();
-
-    this.Logger.info('Start Auction Service');
-    this.Logger.info(JSON.stringify(startAuctionModel, null, 2));
-
+    console.log("start auction");
     const existingAuction = await this.auctionRepository.findOne({
         where: { auctionId: Number(startAuctionModel["auction-id"].value)},
     });
@@ -35,7 +38,6 @@ export class StartAuctionService extends BaseService {
     if (existingAuction != null) {
         return;
     }
-
     
     const auction = new AuctionEntity();
 
@@ -60,5 +62,20 @@ export class StartAuctionService extends BaseService {
     auction.nftAsset = startAuctionModel["nft-asset-contract"].value;
 
     await this.auctionRepository.save(auction);
+
+    this.Logger.info('Auction Saved');
+
+    await this.insertIntoHistory(null, auction, "insert", (entity: AuctionEntity, history: AuctionHistoryEntity) => {
+      history.auctionId = entity.auctionId;
+      history.endBlock = entity.endBlock;
+      history.createdAt = new Date();
+  
+      history.highestBid = entity.highestBid;
+      history.maker = entity.maker;
+  
+      history.highestBidder = entity.highestBidder;
+      history.nftAsset = entity.nftAsset;
+      history.status = entity.status;
+    }, (entity: AuctionHistoryEntity) => this.auctionHistoryRepository.save(entity));
   }
 }
