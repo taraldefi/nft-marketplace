@@ -8,16 +8,22 @@ import { AuctionBidEntityRepositoryToken } from "src/modules/auctions/providers/
 import { AuctionBidEntityRepository } from "src/modules/auctions/repositories/auction.bid.entity.repository";
 import { IsolationLevel } from "src/common/transaction/IsolationLevel";
 import { BaseService } from "./base.service";
+import { AuctionBidHistoryEntityRepositoryToken } from "../providers/auction.bid.history.repository.provider";
+import { AuctionBidHistoryEntityRepository } from "../repositories/auction.bid.history.repository";
+import { AuctionBidHistoryEntity } from "../entities/auction.bid.history.entity";
 
 @Injectable()
-export class PlaceBidService extends BaseService {
+export class PlaceBidService extends BaseService<AuctionBidEntity, AuctionBidHistoryEntity> {
+  
   constructor(
     @Inject(AuctionEntityRepositoryToken)
     private auctionRepository: AuctionEntityRepository,
     @Inject(AuctionBidEntityRepositoryToken)
-    private auctionBidRepository: AuctionBidEntityRepository
+    private auctionBidRepository: AuctionBidEntityRepository,
+    @Inject(AuctionBidHistoryEntityRepositoryToken)
+    private auctionBidHistoryRepository: AuctionBidHistoryEntityRepository,
   ) {
-    super();
+    super(AuctionBidEntity, AuctionBidHistoryEntity, auctionBidHistoryRepository);
   }
 
   @Transactional({
@@ -25,11 +31,10 @@ export class PlaceBidService extends BaseService {
   })
   public async placeBid(placeBidModel: PlaceBid): Promise<void> {
 
+    console.log("placeBid");
+
     this.setupTransactionHooks();
 
-    this.Logger.info('PLACE BID::::: ');
-    this.Logger.info(JSON.stringify(placeBidModel, null, 2));
-    
     const auction = await this.auctionRepository.findOneOrFail({
         where: { auctionId: Number(placeBidModel["auction-id"].value)},
         relations: ['bids'],
@@ -38,7 +43,6 @@ export class PlaceBidService extends BaseService {
     const bid = new AuctionBidEntity();
     bid.amount = Number(placeBidModel.bid.value);
     bid.bidder = placeBidModel.bidder.value;
-    bid.auction = auction;
 
     await this.auctionBidRepository.save(bid);
 
@@ -48,5 +52,19 @@ export class PlaceBidService extends BaseService {
     auction.highestBid = String(bid.amount);
 
     await this.auctionRepository.save(auction);
+
+    this.Logger.info('Bid Saved');
+
+    this.Logger.info('Inserting into history');
+
+    await this.insertIntoHistory(null, bid, "insert", (entity: AuctionBidEntity, history: AuctionBidHistoryEntity) => {
+      history.auctionId = auction.auctionId;
+      history.createdAt = new Date();
+      history.bidder = entity.bidder;
+      history.amount = entity.amount;
+    }, (entity: AuctionBidHistoryEntity) => this.HRepository.save(entity));
+
+    
+    this.Logger.info('Inserted into history');
   }
 }
