@@ -38,7 +38,6 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
     private connection: amqp.Connection | null = null;
     private channel: amqp.Channel | null = null;
     private consuming = false;
-    private shuttingDown = false;
 
     private registry = new Registry();
     private successfulConnectionCounter = new Counter({
@@ -68,7 +67,6 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
         private readonly cancelAuctionService: CancelAuctionService,
         private readonly placeBidService: PlaceBidService,
     ) {
-
     }
 
     async onModuleInit() {
@@ -77,10 +75,21 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
     }
 
     async onApplicationShutdown() {
-        this.shuttingDown = true;
+        this.consuming = true;
 
-        // Cancel all active promises
-        this.activePromises.forEach(p => p.cancel());
+        // Wait for all promises to finish or cancel them if they take more than 5 seconds
+        await Promise.all(
+            this.activePromises.map((cancellablePromise) =>
+            Promise.race([
+                cancellablePromise.promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Promise timeout')), 5000))
+            ]).catch((err) => {
+                this.logger.error(`Error in onApplicationShutdown: ${err}`);
+                cancellablePromise.cancel(); // Cancel the promise if it didn't finish on time
+            })
+            )
+        );
+
         await this.stopListening();
         await this.closeConnection();
     }
@@ -239,7 +248,7 @@ export class RabbitmqService implements OnModuleInit, OnApplicationShutdown {
               };
         
               const consumeNextMessage = async () => {
-                if (this.consuming && !this.shuttingDown) {
+                if (this.consuming) {
                   const promise = getChannelMessage(this.queueName, { noAck: false })
                   .then(processMessage)
                   .catch((err) => {
