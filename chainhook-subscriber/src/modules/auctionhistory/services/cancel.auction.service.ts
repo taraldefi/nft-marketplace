@@ -7,14 +7,20 @@ import { runOnTransactionComplete, runOnTransactionRollback } from "src/common/t
 import { AuctionStatus } from "src/modules/auctions/entities/auction.status";
 import { IsolationLevel } from "src/common/transaction/IsolationLevel";
 import { BaseService } from "./base.service";
+import { AuctionEntity } from "src/modules/auctions/entities/auction.entity";
+import { AuctionHistoryEntity } from "../entities/auction.history.entity";
+import { AuctionHistoryEntityRepositoryToken } from "../providers/auction.history.repository.provider";
+import { AuctionHistoryEntityRepository } from "../repositories/auction.history.repository";
 
 @Injectable()
-export class CancelAuctionService extends BaseService {
+export class CancelAuctionService extends BaseService<AuctionEntity, AuctionHistoryEntity> {
   constructor(
     @Inject(AuctionEntityRepositoryToken)
-    private auctionRepository: AuctionEntityRepository
+    private auctionRepository: AuctionEntityRepository,
+    @Inject(AuctionHistoryEntityRepositoryToken)
+    private auctionHistoryRepository: AuctionHistoryEntityRepository,
   ) {
-    super();
+    super(AuctionEntity, AuctionHistoryEntity, auctionHistoryRepository);
   }
 
   @Transactional({
@@ -23,14 +29,33 @@ export class CancelAuctionService extends BaseService {
   public async cancelAuction(cancelAuctionModel: CancelAuction): Promise<void> {
 
     this.setupTransactionHooks();
+
+    console.log('In cancel auction service');
     
     const auction = await this.auctionRepository.findOneOrFail({
         where: { auctionId: Number(cancelAuctionModel["auction-id"].value)},
         relations: ['bids'],
     });
 
+    const oldAuction = Object.assign(Object.create(Object.getPrototypeOf(auction)), auction) as AuctionEntity;
+
     auction.status = AuctionStatus.CANCELLED;
 
     await this.auctionRepository.save(auction);
+
+    this.Logger.info('Auction Saved');
+
+    await this.insertIntoHistory(oldAuction, auction, "update", (entity: AuctionEntity, history: AuctionHistoryEntity) => {
+      history.auctionId = entity.auctionId;
+      history.endBlock = entity.endBlock;
+      history.createdAt = new Date();
+  
+      history.highestBid = entity.highestBid;
+      history.maker = entity.maker;
+  
+      history.highestBidder = entity.highestBidder;
+      history.nftAsset = entity.nftAsset;
+      history.status = entity.status;
+    }, (entity: AuctionHistoryEntity) => this.auctionHistoryRepository.save(entity));
   }
 }

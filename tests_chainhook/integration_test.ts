@@ -13,7 +13,7 @@ import { types } from "../src/dependencies.ts";
 import { assertEquals } from "../src/dependencies.ts";
 
 Clarinet.test({
-    name: "Ensure auction can be cancelled by the owner",
+    name: "Chainhook integration test",
     async fn(chain: Chain, accounts: Map<string, Account>) {
       let wallet_2 = accounts.get('wallet_2')!;
       let wallet_1 = accounts.get("wallet_1")!;
