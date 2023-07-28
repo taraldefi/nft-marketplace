@@ -51,6 +51,7 @@ export class PlaceBidService extends BaseService {
     const bid = new AuctionBidEntity();
     bid.amount = Number(placeBidModel.bid.value);
     bid.bidder = placeBidModel.bidder.value;
+    bid.hash = this.calculateHash(auction);
 
     if (auction.bids.find(b => b.bidder === bid.bidder && b.amount == bid.amount)) {
       // same bid, do nothing
@@ -64,6 +65,7 @@ export class PlaceBidService extends BaseService {
 
     auction.highestBidder = bid.bidder;
     auction.highestBid = String(bid.amount);
+    auction.hash = this.calculateHash(auction);
 
     await this.auctionRepository.save(auction);
 
@@ -76,6 +78,7 @@ export class PlaceBidService extends BaseService {
       history.createdAt = new Date();
       history.bidder = entity.bidder;
       history.amount = entity.amount;
+      history.hash = entity.hash;
     }, (entity: AuctionBidHistoryEntity) => this.auctionBidHistoryRepository.save(entity));
 
     await this.insertIntoHistory(AuctionHistoryEntity, oldAuction, auction, "update", (entity: AuctionEntity, history: AuctionHistoryEntity) => {
@@ -89,6 +92,7 @@ export class PlaceBidService extends BaseService {
       history.highestBidder = entity.highestBidder;
       history.nftAsset = entity.nftAsset;
       history.status = entity.status;
+      history.hash = entity.hash;
     }, (entity: AuctionHistoryEntity) => this.auctionHistoryRepository.save(entity));
 
     
