@@ -45,6 +45,7 @@ export class CancelAuctionService extends BaseService {
     const oldAuction = Object.assign(Object.create(Object.getPrototypeOf(auction)), auction) as AuctionEntity;
 
     auction.status = AuctionStatus.CANCELLED;
+    auction.hash = this.calculateHash(auction);
 
     await this.auctionRepository.save(auction);
 
@@ -61,6 +62,7 @@ export class CancelAuctionService extends BaseService {
       history.highestBidder = entity.highestBidder;
       history.nftAsset = entity.nftAsset;
       history.status = entity.status;
+      history.hash = entity.hash;
     }, (entity: AuctionHistoryEntity) => this.auctionHistoryRepository.save(entity));
   }
 }
