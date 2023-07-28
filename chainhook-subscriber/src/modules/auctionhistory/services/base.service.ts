@@ -1,5 +1,4 @@
 import { METADATA_KEY } from "src/common/decorators/track-changes.decorator";
-import { BaseSimpleRepository } from "src/common/repository/base.simple.repository";
 import { runOnTransactionCommit, runOnTransactionComplete, runOnTransactionRollback } from "src/common/transaction/hook";
 import { BaseHistory } from "src/modules/history/entities/base.history.entity";
 
@@ -22,9 +21,8 @@ export abstract class BaseService {
 
     protected setupTransactionHooks() {
         runOnTransactionRollback((cb) =>
-            this.Logger.info(`[ROLLBACK] Error: ${cb.message}`),
+            this.Logger.error(`[ROLLBACK] Error: ${cb.message}`),
         );
-
 
         runOnTransactionComplete((_) => this.Logger.info('[COMMIT] Transaction Complete'));
         runOnTransactionCommit(() => this.Logger.info('[COMMIT] Transaction Commit'));
@@ -71,15 +69,10 @@ export abstract class BaseService {
         await save(history);
     }
 
-    buildChanges<T extends { id: string }, H extends BaseHistory>(oldEntity: T, newEntity: T): Array<{ name: string, old_value: any, new_value: any }> {
+    buildChanges<T extends { id: string }>(oldEntity: T, newEntity: T): Array<{ name: string, old_value: any, new_value: any }> {
         const changes = [];
     
         const decoratedProperties: Array<string | symbol> = Reflect.getMetadata(METADATA_KEY, newEntity.constructor);
-
-        console.log('IN BUILD CHANGES');
-        console.log(JSON.stringify(decoratedProperties, null, 2));
-        console.log(JSON.stringify(oldEntity, null, 2));
-        console.log(JSON.stringify(newEntity, null, 2));
 
         for (const key of decoratedProperties) {
             // Skip if the property is not a direct property of newEntity
