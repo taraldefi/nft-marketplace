@@ -52,6 +52,12 @@ export class PlaceBidService extends BaseService {
     bid.amount = Number(placeBidModel.bid.value);
     bid.bidder = placeBidModel.bidder.value;
 
+    if (auction.bids.find(b => b.bidder === bid.bidder && b.amount == bid.amount)) {
+      // same bid, do nothing
+      this.Logger.info('Same bid, do nothing');
+      return;
+    }
+
     await this.auctionBidRepository.save(bid);
 
     (auction.bids || []).push(bid);

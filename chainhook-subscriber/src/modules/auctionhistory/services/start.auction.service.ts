@@ -36,6 +36,7 @@ export class StartAuctionService extends BaseService {
     });
 
     if (existingAuction != null) {
+        this.Logger.info('Auction already exists');
         return;
     }
     

@@ -37,6 +37,11 @@ export class CancelAuctionService extends BaseService {
         relations: ['bids'],
     });
 
+    if (auction != null && auction.status == AuctionStatus.CANCELLED) {
+      this.Logger.info('Auction already cancelled');  
+      return;
+    }
+
     const oldAuction = Object.assign(Object.create(Object.getPrototypeOf(auction)), auction) as AuctionEntity;
 
     auction.status = AuctionStatus.CANCELLED;
