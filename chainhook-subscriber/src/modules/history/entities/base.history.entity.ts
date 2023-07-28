@@ -24,6 +24,9 @@ import {
     @Column('json', { default: {} })
     changes: any;
 
+    @Column({ type: 'char', length: 64 })
+    hash: string;
+
     @BeforeInsert()
     createTimestamp() {
       this.createdAt = new Date();
