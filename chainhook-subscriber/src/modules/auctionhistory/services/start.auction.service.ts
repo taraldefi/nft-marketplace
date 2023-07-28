@@ -62,6 +62,8 @@ export class StartAuctionService extends BaseService {
 
     auction.nftAsset = startAuctionModel["nft-asset-contract"].value;
 
+    auction.hash = this.calculateHash(auction);
+
     await this.auctionRepository.save(auction);
 
     this.Logger.info('Auction Saved');
@@ -77,6 +79,7 @@ export class StartAuctionService extends BaseService {
       history.highestBidder = entity.highestBidder;
       history.nftAsset = entity.nftAsset;
       history.status = entity.status;
+      history.hash = entity.hash;
     }, (entity: AuctionHistoryEntity) => this.auctionHistoryRepository.save(entity));
   }
 }
