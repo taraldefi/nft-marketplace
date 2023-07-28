@@ -11,9 +11,13 @@ import { BaseService } from "./base.service";
 import { AuctionBidHistoryEntityRepositoryToken } from "../providers/auction.bid.history.repository.provider";
 import { AuctionBidHistoryEntityRepository } from "../repositories/auction.bid.history.repository";
 import { AuctionBidHistoryEntity } from "../entities/auction.bid.history.entity";
+import { AuctionEntity } from "src/modules/auctions/entities/auction.entity";
+import { AuctionHistoryEntity } from "../entities/auction.history.entity";
+import { AuctionHistoryEntityRepositoryToken } from "../providers/auction.history.repository.provider";
+import { AuctionHistoryEntityRepository } from "../repositories/auction.history.repository";
 
 @Injectable()
-export class PlaceBidService extends BaseService<AuctionBidEntity, AuctionBidHistoryEntity> {
+export class PlaceBidService extends BaseService {
   
   constructor(
     @Inject(AuctionEntityRepositoryToken)
@@ -22,8 +26,10 @@ export class PlaceBidService extends BaseService<AuctionBidEntity, AuctionBidHis
     private auctionBidRepository: AuctionBidEntityRepository,
     @Inject(AuctionBidHistoryEntityRepositoryToken)
     private auctionBidHistoryRepository: AuctionBidHistoryEntityRepository,
+    @Inject(AuctionHistoryEntityRepositoryToken)
+    private auctionHistoryRepository: AuctionHistoryEntityRepository,
   ) {
-    super(AuctionBidEntity, AuctionBidHistoryEntity, auctionBidHistoryRepository);
+    super();
   }
 
   @Transactional({
@@ -39,6 +45,8 @@ export class PlaceBidService extends BaseService<AuctionBidEntity, AuctionBidHis
         where: { auctionId: Number(placeBidModel["auction-id"].value)},
         relations: ['bids'],
     });
+
+    const oldAuction = Object.assign(Object.create(Object.getPrototypeOf(auction)), auction) as AuctionEntity;
 
     const bid = new AuctionBidEntity();
     bid.amount = Number(placeBidModel.bid.value);
@@ -57,12 +65,25 @@ export class PlaceBidService extends BaseService<AuctionBidEntity, AuctionBidHis
 
     this.Logger.info('Inserting into history');
 
-    await this.insertIntoHistory(null, bid, "insert", (entity: AuctionBidEntity, history: AuctionBidHistoryEntity) => {
+    await this.insertIntoHistory(AuctionBidHistoryEntity, null, bid, "insert", (entity: AuctionBidEntity, history: AuctionBidHistoryEntity) => {
       history.auctionId = auction.auctionId;
       history.createdAt = new Date();
       history.bidder = entity.bidder;
       history.amount = entity.amount;
-    }, (entity: AuctionBidHistoryEntity) => this.HRepository.save(entity));
+    }, (entity: AuctionBidHistoryEntity) => this.auctionBidHistoryRepository.save(entity));
+
+    await this.insertIntoHistory(AuctionHistoryEntity, oldAuction, auction, "update", (entity: AuctionEntity, history: AuctionHistoryEntity) => {
+      history.auctionId = entity.auctionId;
+      history.endBlock = entity.endBlock;
+      history.createdAt = new Date();
+  
+      history.highestBid = entity.highestBid;
+      history.maker = entity.maker;
+  
+      history.highestBidder = entity.highestBidder;
+      history.nftAsset = entity.nftAsset;
+      history.status = entity.status;
+    }, (entity: AuctionHistoryEntity) => this.auctionHistoryRepository.save(entity));
 
     
     this.Logger.info('Inserted into history');

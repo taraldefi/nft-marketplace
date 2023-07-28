@@ -13,14 +13,14 @@ import { AuctionHistoryEntityRepositoryToken } from "../providers/auction.histor
 import { AuctionHistoryEntityRepository } from "../repositories/auction.history.repository";
 
 @Injectable()
-export class CancelAuctionService extends BaseService<AuctionEntity, AuctionHistoryEntity> {
+export class CancelAuctionService extends BaseService {
   constructor(
     @Inject(AuctionEntityRepositoryToken)
     private auctionRepository: AuctionEntityRepository,
     @Inject(AuctionHistoryEntityRepositoryToken)
     private auctionHistoryRepository: AuctionHistoryEntityRepository,
   ) {
-    super(AuctionEntity, AuctionHistoryEntity, auctionHistoryRepository);
+    super();
   }
 
   @Transactional({
@@ -45,7 +45,7 @@ export class CancelAuctionService extends BaseService<AuctionEntity, AuctionHist
 
     this.Logger.info('Auction Saved');
 
-    await this.insertIntoHistory(oldAuction, auction, "update", (entity: AuctionEntity, history: AuctionHistoryEntity) => {
+    await this.insertIntoHistory(AuctionHistoryEntity, oldAuction, auction, "update", (entity: AuctionEntity, history: AuctionHistoryEntity) => {
       history.auctionId = entity.auctionId;
       history.endBlock = entity.endBlock;
       history.createdAt = new Date();

@@ -7,18 +7,22 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TrackChanges } from '../decorators/track-changes.decorator';
 
 /**
  * custom base entity
  */
 export abstract class CustomBaseEntity extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
+  @TrackChanges()
   id: string;
 
   @Column({ type: 'timestamp', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
+  @TrackChanges()
   createdAt: Date;
 
   @Column({ type: 'timestamp', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
+  @TrackChanges()
   updatedAt: Date;
 
   @BeforeInsert()
