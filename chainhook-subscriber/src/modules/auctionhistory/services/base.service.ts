@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { METADATA_KEY } from "src/common/decorators/track-changes.decorator";
 import { runOnTransactionCommit, runOnTransactionComplete, runOnTransactionRollback } from "src/common/transaction/hook";
 import { BaseHistory } from "src/modules/history/entities/base.history.entity";
@@ -50,26 +51,29 @@ export abstract class BaseService {
         copyEntityToHistory(entity, history);
 
         this.Logger.info('Inside insertIntoHistory - awaiting save');
-
-        const cache = new Set();
-        const replacer = (key, value) => {
-        if (typeof value === 'object' && value !== null) {
-            if (cache.has(value)) {
-            // Duplicate reference found, discard key
-            return;
-            }
-            // Store value in our set
-            cache.add(value);
-        }
-        return value;
-        };  
-
-        console.log(JSON.stringify(history, replacer, 2));
+        console.log(this.stringify(history));
 
         await save(history);
     }
 
-    buildChanges<T extends { id: string }>(oldEntity: T, newEntity: T): Array<{ name: string, old_value: any, new_value: any }> {
+    protected calculateHash(entity: any): string {
+        const properties: Array<string | symbol> = Reflect.getMetadata(METADATA_KEY, entity.constructor) || [];
+    
+        const obj: { [key: string]: any } = {};
+    
+        for (const key of properties) {
+            if (entity.hasOwnProperty(key)) {
+                obj[String(key)] = entity[key];
+            }
+        }
+    
+        const str = this.stringify(obj);
+        const hash = createHash('sha256');
+        hash.update(str);
+        return hash.digest('hex');
+    }
+
+    private buildChanges<T extends { id: string }>(oldEntity: T, newEntity: T): Array<{ name: string, old_value: any, new_value: any }> {
         const changes = [];
     
         const decoratedProperties: Array<string | symbol> = Reflect.getMetadata(METADATA_KEY, newEntity.constructor);
@@ -90,5 +94,22 @@ export abstract class BaseService {
         }
     
         return changes;
+    }
+
+    private stringify(obj: any): string {
+        const cache = new Set();
+        const replacer = (key, value) => {
+            if (typeof value === 'object' && value !== null) {
+                if (cache.has(value)) {
+                // Duplicate reference found, discard key
+                return;
+                }
+                // Store value in our set
+                cache.add(value);
+            }
+            return value;
+        };  
+
+        return JSON.stringify(obj, replacer, 2);
     }
 }
