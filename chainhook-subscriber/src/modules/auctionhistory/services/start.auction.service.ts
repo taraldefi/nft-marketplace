@@ -12,7 +12,7 @@ import { AuctionHistoryEntityRepositoryToken } from "../providers/auction.histor
 import { AuctionHistoryEntityRepository } from "../repositories/auction.history.repository";
 
 @Injectable()
-export class StartAuctionService extends BaseService<AuctionEntity, AuctionHistoryEntity> {
+export class StartAuctionService extends BaseService {
   
   constructor(
     @Inject(AuctionEntityRepositoryToken)
@@ -21,7 +21,7 @@ export class StartAuctionService extends BaseService<AuctionEntity, AuctionHisto
     @Inject(AuctionHistoryEntityRepositoryToken)
     private auctionHistoryRepository: AuctionHistoryEntityRepository,
   ) {
-    super(AuctionEntity, AuctionHistoryEntity, auctionHistoryRepository);
+    super();
   }
 
   @Transactional({
@@ -36,6 +36,7 @@ export class StartAuctionService extends BaseService<AuctionEntity, AuctionHisto
     });
 
     if (existingAuction != null) {
+        this.Logger.info('Auction already exists');
         return;
     }
     
@@ -61,11 +62,13 @@ export class StartAuctionService extends BaseService<AuctionEntity, AuctionHisto
 
     auction.nftAsset = startAuctionModel["nft-asset-contract"].value;
 
+    auction.hash = this.calculateHash(auction);
+
     await this.auctionRepository.save(auction);
 
     this.Logger.info('Auction Saved');
 
-    await this.insertIntoHistory(null, auction, "insert", (entity: AuctionEntity, history: AuctionHistoryEntity) => {
+    await this.insertIntoHistory(AuctionHistoryEntity, null, auction, "insert", (entity: AuctionEntity, history: AuctionHistoryEntity) => {
       history.auctionId = entity.auctionId;
       history.endBlock = entity.endBlock;
       history.createdAt = new Date();
@@ -76,6 +79,7 @@ export class StartAuctionService extends BaseService<AuctionEntity, AuctionHisto
       history.highestBidder = entity.highestBidder;
       history.nftAsset = entity.nftAsset;
       history.status = entity.status;
+      history.hash = entity.hash;
     }, (entity: AuctionHistoryEntity) => this.auctionHistoryRepository.save(entity));
   }
 }

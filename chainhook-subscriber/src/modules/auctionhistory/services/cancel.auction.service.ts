@@ -13,14 +13,14 @@ import { AuctionHistoryEntityRepositoryToken } from "../providers/auction.histor
 import { AuctionHistoryEntityRepository } from "../repositories/auction.history.repository";
 
 @Injectable()
-export class CancelAuctionService extends BaseService<AuctionEntity, AuctionHistoryEntity> {
+export class CancelAuctionService extends BaseService {
   constructor(
     @Inject(AuctionEntityRepositoryToken)
     private auctionRepository: AuctionEntityRepository,
     @Inject(AuctionHistoryEntityRepositoryToken)
     private auctionHistoryRepository: AuctionHistoryEntityRepository,
   ) {
-    super(AuctionEntity, AuctionHistoryEntity, auctionHistoryRepository);
+    super();
   }
 
   @Transactional({
@@ -37,15 +37,21 @@ export class CancelAuctionService extends BaseService<AuctionEntity, AuctionHist
         relations: ['bids'],
     });
 
+    if (auction != null && auction.status == AuctionStatus.CANCELLED) {
+      this.Logger.info('Auction already cancelled');  
+      return;
+    }
+
     const oldAuction = Object.assign(Object.create(Object.getPrototypeOf(auction)), auction) as AuctionEntity;
 
     auction.status = AuctionStatus.CANCELLED;
+    auction.hash = this.calculateHash(auction);
 
     await this.auctionRepository.save(auction);
 
     this.Logger.info('Auction Saved');
 
-    await this.insertIntoHistory(oldAuction, auction, "update", (entity: AuctionEntity, history: AuctionHistoryEntity) => {
+    await this.insertIntoHistory(AuctionHistoryEntity, oldAuction, auction, "update", (entity: AuctionEntity, history: AuctionHistoryEntity) => {
       history.auctionId = entity.auctionId;
       history.endBlock = entity.endBlock;
       history.createdAt = new Date();
@@ -56,6 +62,7 @@ export class CancelAuctionService extends BaseService<AuctionEntity, AuctionHist
       history.highestBidder = entity.highestBidder;
       history.nftAsset = entity.nftAsset;
       history.status = entity.status;
+      history.hash = entity.hash;
     }, (entity: AuctionHistoryEntity) => this.auctionHistoryRepository.save(entity));
   }
 }
